@@ -494,3 +494,33 @@ Fixed residual cross-fitting parameter:
 
 K\_r = 5
 
+
+
+\## Proposer validation leakage rule
+
+
+
+When a residual-attention proposer uses a separate validation subset,
+
+residual targets must be generated only after the proposer
+
+train/validation partition is fixed.
+
+
+
+Training residuals are cross-fitted exclusively within the proposer
+
+training subset.
+
+
+
+Validation residuals are obtained from a main-effect NAM trained
+
+exclusively on proposer-training observations.
+
+
+
+Thus, proposer-validation observations cannot influence the residual
+
+targets used for proposer optimization.
+
