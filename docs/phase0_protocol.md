@@ -432,3 +432,65 @@ All models will internally encode the predefined positive class as 1 and the alt
 
 This mapping must not be changed based on predictive performance.
 
+
+
+\## Residual target for interaction proposal
+
+
+
+For binary classification, the interaction-proposal stage uses
+
+Bernoulli negative-gradient pseudo-residuals:
+
+
+
+r\_i = y\_i - p\_i
+
+
+
+where:
+
+
+
+p\_i = sigmoid(eta\_i)
+
+
+
+This residual corresponds exactly to the negative derivative of
+
+binary cross-entropy with respect to the model logit.
+
+
+
+Pearson and deviance residuals are not used as primary residual
+
+targets.
+
+
+
+Residuals used for interaction proposal must be cross-fitted.
+
+
+
+Within each outer-training partition, 5-fold cross-fitting is used
+
+to obtain out-of-fold main-effect NAM predictions:
+
+
+
+r\_i^(OOF) = y\_i - sigmoid(eta\_hat^(-k(i))(x\_i))
+
+
+
+Thus, no observation receives a residual obtained from a
+
+main-effect NAM that was trained on that same observation.
+
+
+
+Fixed residual cross-fitting parameter:
+
+
+
+K\_r = 5
+
