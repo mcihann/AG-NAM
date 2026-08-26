@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+src/agnam/__init__.py
+src/agnam.egg-info/PKG-INFO
+src/agnam.egg-info/SOURCES.txt
+src/agnam.egg-info/dependency_links.txt
+src/agnam.egg-info/requires.txt
+src/agnam.egg-info/top_level.txt
