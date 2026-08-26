@@ -1,0 +1,51 @@
+benchmark_targets:
+
+  49:
+    dataset: tic-tac-toe
+    raw_positive_label: "positive"
+    semantic_positive_class: "X wins"
+
+  14952:
+    dataset: PhishingWebsites
+    raw_positive_label: "-1"
+    semantic_positive_class: "phishing website"
+
+  29:
+    dataset: credit-approval
+    raw_positive_label: "+"
+    semantic_positive_class: "credit approved"
+
+  167141:
+    dataset: churn
+    raw_positive_label: "1"
+    semantic_positive_class: "customer churn"
+
+  14965:
+    dataset: bank-marketing
+    raw_positive_label: "2"
+    semantic_positive_class: "term-deposit subscription"
+
+  7592:
+    dataset: adult
+    raw_positive_label: ">50K"
+    semantic_positive_class: "income greater than 50K"
+
+  9957:
+    dataset: qsar-biodeg
+    raw_positive_label: "2"
+    semantic_positive_class: "ready biodegradable"
+
+  9978:
+    dataset: ozone-level-8hr
+    raw_positive_label: "2"
+    semantic_positive_class: "ozone day"
+
+  43:
+    dataset: spambase
+    raw_positive_label: "1"
+    semantic_positive_class: "spam"
+
+  3904:
+    dataset: jm1
+    raw_positive_label: "True"
+    semantic_positive_class: "software defect"

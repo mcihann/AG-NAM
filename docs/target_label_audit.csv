@@ -1,0 +1,11 @@
+task_id,dataset_name,target_name,class_1,class_1_count,class_2,class_2_count
+49,tic-tac-toe,Class,positive,626,negative,332
+14952,PhishingWebsites,Result,1,6157,-1,4898
+29,credit-approval,class,-,383,+,307
+167141,churn,class,0,4293,1,707
+14965,bank-marketing,Class,1,39922,2,5289
+7592,adult,class,<=50K,37155,>50K,11687
+9957,qsar-biodeg,Class,1,699,2,356
+9978,ozone-level-8hr,Class,1,2374,2,160
+43,spambase,class,0,2788,1,1813
+3904,jm1,defects,False,8779,True,2106

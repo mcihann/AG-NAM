@@ -1,0 +1,434 @@
+\# AG-NAM Phase 0 Protocol Lock
+
+
+
+\## Methodological objective
+
+
+
+AG-NAM investigates whether attention-guided interaction proposals can be filtered according to cross-resample reproducibility to construct an intrinsically decomposable neural additive predictor.
+
+
+
+Attention is not treated as an explanation and is not part of the final predictive model.
+
+
+
+\## Final model form
+
+
+
+For binary classification:
+
+
+
+eta(x) = beta\_0 + sum\_j f\_j(x\_j) + sum\_(j,k in S\*) f\_jk(x\_j, x\_k)
+
+
+
+p(y=1|x) = sigmoid(eta(x))
+
+
+
+The prediction is therefore exactly decomposable into:
+
+
+
+\- baseline contribution,
+
+\- univariate main effects,
+
+\- explicit pairwise interaction effects.
+
+
+
+\## Interaction discovery
+
+
+
+Candidate interactions are proposed using a residual-targeted attention mechanism.
+
+
+
+Raw attention weights are not interpreted as feature importance.
+
+
+
+Candidate rankings are derived from the contribution of attention connections to residual prediction.
+
+
+
+\## Selection reproducibility
+
+
+
+For interaction (j,k):
+
+
+
+pi\_jk = (1/B) \* sum\_b I\[(j,k) belongs to TopK\_b]
+
+
+
+Primary discovery setting:
+
+
+
+B = 5
+
+
+
+An interaction must satisfy:
+
+
+
+pi\_jk >= 0.60
+
+
+
+\## Interaction Surface Reproducibility (ISR)
+
+
+
+Selection frequency alone is insufficient.
+
+
+
+For every repeatedly selected interaction, the learned interaction functions are evaluated on a common reference support sampled from the outer-training data.
+
+
+
+Interaction surfaces learned across resamples are centered and compared for functional agreement.
+
+
+
+An interaction must satisfy:
+
+
+
+ISR\_jk >= 0.60
+
+
+
+\## Candidate-set size
+
+
+
+Let:
+
+
+
+P = p(p-1)/2
+
+
+
+The number of candidate pairs is:
+
+
+
+K = clip(ceil(0.10 \* P), 5, 20)
+
+
+
+where clip restricts K to the interval \[5, 20].
+
+
+
+\## Final interaction acceptance
+
+
+
+An interaction is retained only if both:
+
+
+
+pi\_jk >= 0.60
+
+
+
+and
+
+
+
+ISR\_jk >= 0.60
+
+
+
+are satisfied.
+
+
+
+\## General benchmark datasets
+
+
+
+The following OpenML-CC18 binary-classification tasks were selected before model evaluation:
+
+
+
+1\. Task 49 — tic-tac-toe
+
+2\. Task 14952 — PhishingWebsites
+
+3\. Task 29 — credit-approval
+
+4\. Task 167141 — churn
+
+5\. Task 14965 — bank-marketing
+
+6\. Task 7592 — adult
+
+7\. Task 9957 — qsar-biodeg
+
+8\. Task 9978 — ozone-level-8hr
+
+9\. Task 43 — spambase
+
+10\. Task 3904 — jm1
+
+
+
+Dataset selection was based only on metadata, including sample size, dimensionality, predictor type, missingness, class imbalance, and domain diversity.
+
+
+
+No model-performance results were inspected before dataset selection.
+
+
+
+\## Biomedical case studies
+
+
+
+\### Case Study 1
+
+WDBC / Breast Cancer Wisconsin Diagnostic
+
+
+
+Purpose:
+
+\- global main-effect visualization,
+
+\- pairwise interaction visualization,
+
+\- local additive decomposition.
+
+
+
+\### Case Study 2
+
+Diabetes 130-US Hospitals
+
+
+
+Target:
+
+30-day readmission versus all other outcomes.
+
+
+
+Repeated encounters from the same patient must not cross evaluation partitions.
+
+
+
+patient\_nbr is used only as a grouping variable and not as a predictor.
+
+
+
+\## Synthetic scenarios
+
+
+
+Four predefined synthetic scenarios will be used:
+
+
+
+\- S1: sparse strong pairwise interactions
+
+\- S2: multiple nonlinear interactions
+
+\- S3: correlated nuisance features
+
+\- S4: weak interactions under high-dimensional noise and class imbalance
+
+
+
+Each scenario will use 20 independent dataset realizations.
+
+
+
+\## Primary predictive metric
+
+
+
+AUROC
+
+
+
+\## Secondary predictive metrics
+
+
+
+\- AUPRC
+
+\- Balanced Accuracy
+
+\- F1
+
+
+
+Accuracy may be reported descriptively but is not a primary metric.
+
+
+
+\## Interaction-recovery metrics
+
+
+
+Primary:
+
+
+
+\- Interaction AUPRC
+
+
+
+Secondary:
+
+
+
+\- Precision@K
+
+\- Recall@K
+
+\- NDCG@K
+
+\- Exact Recovery Rate
+
+\- False Discovery Rate
+
+\- Selection Reproducibility
+
+\- Interaction Surface Reproducibility
+
+
+
+\## Evaluation protocol
+
+
+
+General OpenML benchmarks:
+
+
+
+\- official OpenML 10-fold outer evaluation
+
+\- 3-fold stratified inner validation
+
+\- no outer-test information is used for preprocessing, interaction discovery, hyperparameter selection, or early stopping
+
+
+
+Biomedical repeated-patient data:
+
+
+
+\- group-aware stratified evaluation
+
+\- patient identity is used only for grouping
+
+
+
+\## Statistical analysis
+
+
+
+Across benchmark datasets:
+
+
+
+\- Friedman test
+
+\- Wilcoxon signed-rank pairwise comparisons
+
+\- Holm correction for multiple comparisons
+
+\- mean ranks
+
+\- effect sizes where appropriate
+
+
+
+\## Prohibited leakage
+
+
+
+The following operations must never use outer-test data:
+
+
+
+\- imputation
+
+\- scaling
+
+\- categorical vocabulary construction
+
+\- interaction proposal
+
+\- interaction selection
+
+\- ISR estimation
+
+\- hyperparameter optimization
+
+\- early stopping
+
+\- classification-threshold optimization
+
+
+
+\## Positive-class definition
+
+
+
+Positive-class mappings were fixed before any predictive model was evaluated.
+
+
+
+The predefined positive labels are:
+
+
+
+| OpenML task | Dataset | Positive raw label |
+
+| --- | --- | --- |
+
+| 49 | tic-tac-toe | positive |
+
+| 14952 | PhishingWebsites | -1 |
+
+| 29 | credit-approval | + |
+
+| 167141 | churn | 1 |
+
+| 14965 | bank-marketing | 2 |
+
+| 7592 | adult | >50K |
+
+| 9957 | qsar-biodeg | 2 |
+
+| 9978 | ozone-level-8hr | 2 |
+
+| 43 | spambase | 1 |
+
+| 3904 | jm1 | True |
+
+
+
+All models will internally encode the predefined positive class as 1 and the alternative class as 0.
+
+
+
+This mapping must not be changed based on predictive performance.
+
