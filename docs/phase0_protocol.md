@@ -666,3 +666,119 @@ Selection probability is the primary criterion; mean and median ranks
 
 are descriptive diagnostics only.
 
+
+
+\## Interaction Surface Reproducibility (ISR)
+
+
+
+Selection reproducibility alone is not considered sufficient evidence
+
+for retaining an interaction.
+
+
+
+Only interactions satisfying:
+
+
+
+pi\_jk >= 0.60
+
+
+
+proceed to functional reproducibility assessment.
+
+
+
+For each accepted candidate pair, an explicit pairwise residual model
+
+is fitted independently in every discovery run in which that pair was
+
+selected in the Top-K candidate set.
+
+
+
+A fixed common raw-data reference support is used:
+
+
+
+M = min(512, N)
+
+
+
+Reference observations are sampled with fixed seed 2026 from the
+
+available outer-training/development data.
+
+
+
+Before cross-run comparison, each learned pairwise function is
+
+purified using an empirical functional-ANOVA projection.
+
+
+
+For interaction function h\_jk and reference observations
+
+{(x\_j\_i, x\_k\_i)}:
+
+
+
+v\_i =
+
+&#x20;   h(x\_j\_i, x\_k\_i)
+
+&#x20;   - mean\_m h(x\_j\_i, x\_k\_m)
+
+&#x20;   - mean\_m h(x\_j\_m, x\_k\_i)
+
+&#x20;   + mean\_mn h(x\_j\_m, x\_k\_n)
+
+
+
+Thus, univariate marginal structure and the global intercept are
+
+removed before functional comparison.
+
+
+
+Interaction Surface Reproducibility is defined as the mean pairwise
+
+Pearson correlation between purified interaction vectors obtained
+
+from the discovery runs in which the interaction was selected.
+
+
+
+If a purified interaction vector has effectively zero variance, its
+
+functional agreement is treated as zero.
+
+
+
+The primary ISR threshold is:
+
+
+
+ISR\_jk >= 0.60
+
+
+
+Final interaction retention requires both:
+
+
+
+pi\_jk >= 0.60
+
+
+
+and
+
+
+
+ISR\_jk >= 0.60
+
+
+
+Neither threshold may be changed based on S1 first-look results.
+
