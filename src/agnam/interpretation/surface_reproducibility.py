@@ -29,12 +29,15 @@ def purify_interaction_grid(
 
         h(x_j_i, x_k_m)
 
-    Returns:
+    Purified interaction:
 
         h_jk
         - E_k[h_jk | x_j]
         - E_j[h_jk | x_k]
         + E_jk[h_jk]
+
+    The empirical projection is defined relative to the product
+    of the marginal reference distributions.
     """
     raw_grid = np.asarray(
         raw_grid,
@@ -51,7 +54,9 @@ def purify_interaction_grid(
             "raw_grid must be square."
         )
 
-    if not np.isfinite(raw_grid).all():
+    if not np.isfinite(
+        raw_grid
+    ).all():
         raise ValueError(
             "raw_grid must contain finite values."
         )
@@ -66,7 +71,9 @@ def purify_interaction_grid(
         keepdims=True,
     )
 
-    grand_mean = raw_grid.mean()
+    grand_mean = float(
+        raw_grid.mean()
+    )
 
     return (
         raw_grid
@@ -80,8 +87,8 @@ def diagonal_purified_vector(
     raw_grid: np.ndarray,
 ) -> np.ndarray:
     """
-    Purified contributions evaluated at the original
-    paired reference observations.
+    Return purified interaction contributions evaluated at the
+    original paired reference observations.
     """
     purified = purify_interaction_grid(
         raw_grid
@@ -130,7 +137,9 @@ def _safe_pearson(
         )[0, 1]
     )
 
-    if not np.isfinite(correlation):
+    if not np.isfinite(
+        correlation
+    ):
         return 0.0
 
     return correlation
@@ -143,10 +152,14 @@ def compute_isr(
     ],
 ) -> SurfaceAgreement:
     """
-    Mean pairwise Pearson agreement between purified
-    interaction surfaces.
+    Interaction Surface Reproducibility.
+
+    ISR is the mean pairwise Pearson correlation between purified
+    interaction vectors learned in the runs where a pair was selected.
     """
-    if len(purified_vectors) < 2:
+    if len(
+        purified_vectors
+    ) < 2:
         raise ValueError(
             "At least two interaction surfaces are required for ISR."
         )
@@ -161,7 +174,9 @@ def compute_isr(
                 "All purified vectors must share the same shape."
             )
 
-    correlations: list[float] = []
+    correlations: list[
+        float
+    ] = []
 
     for first, second in combinations(
         purified_vectors,
@@ -189,10 +204,50 @@ def compute_isr(
     )
 
 
-@torch.no_grad()
-def evaluate_pairwise_raw_grid(
+def _validate_cross_grid_inputs(
     model: PairwiseResidualNetwork,
-    reference_data: TransformedTabular,
+    row_data: TransformedTabular,
+    column_data: TransformedTabular,
+) -> None:
+    if len(row_data) == 0:
+        raise ValueError(
+            "row_data cannot be empty."
+        )
+
+    if len(column_data) == 0:
+        raise ValueError(
+            "column_data cannot be empty."
+        )
+
+    if tuple(
+        row_data.feature_specs
+    ) != tuple(
+        column_data.feature_specs
+    ):
+        raise ValueError(
+            "row_data and column_data must use identical "
+            "feature specifications."
+        )
+
+    available_names = {
+        spec.name
+        for spec
+        in row_data.feature_specs
+    }
+
+    for spec in model.feature_specs:
+        if spec.name not in available_names:
+            raise ValueError(
+                f"Pairwise feature '{spec.name}' "
+                "is absent from transformed data."
+            )
+
+
+@torch.no_grad()
+def evaluate_pairwise_cross_grid(
+    model: PairwiseResidualNetwork,
+    row_data: TransformedTabular,
+    column_data: TransformedTabular,
     *,
     batch_size: int = 8192,
     device: Optional[
@@ -200,21 +255,34 @@ def evaluate_pairwise_raw_grid(
     ] = None,
 ) -> np.ndarray:
     """
-    Evaluate h_jk(x_j_i, x_k_m) for all M x M combinations
-    in a common transformed reference support.
+    Evaluate a pairwise network on a rectangular cross-product.
 
-    The first feature receives observation i.
-    The second feature receives observation m.
+    For model features (j, k):
+
+        grid[i, m] =
+            h_jk(
+                x_j from row_data[i],
+                x_k from column_data[m]
+            )
+
+    This operation is used by the empirical functional-ANOVA
+    projection.
+
+    Returns
+    -------
+    np.ndarray
+        Shape [n_rows, n_columns].
     """
-    if len(reference_data) == 0:
-        raise ValueError(
-            "reference_data cannot be empty."
-        )
-
     if batch_size <= 0:
         raise ValueError(
             "batch_size must be positive."
         )
+
+    _validate_cross_grid_inputs(
+        model=model,
+        row_data=row_data,
+        column_data=column_data,
+    )
 
     if device is None:
         device = get_device()
@@ -225,23 +293,30 @@ def evaluate_pairwise_raw_grid(
 
     model.eval()
 
-    m = len(
-        reference_data
+    n_rows = len(
+        row_data
+    )
+
+    n_columns = len(
+        column_data
     )
 
     n_numeric = (
-        reference_data
+        row_data
         .numeric
         .shape[1]
     )
 
     n_categorical = (
-        reference_data
+        row_data
         .categorical
         .shape[1]
     )
 
-    total = m * m
+    total = (
+        n_rows
+        * n_columns
+    )
 
     predictions = np.empty(
         total,
@@ -265,15 +340,18 @@ def evaluate_pairwise_raw_grid(
         )
 
         row_indices = (
-            flat_indices // m
+            flat_indices
+            // n_columns
         )
 
         column_indices = (
-            flat_indices % m
+            flat_indices
+            % n_columns
         )
 
         current_batch = (
-            stop - start
+            stop
+            - start
         )
 
         numeric = np.zeros(
@@ -300,52 +378,83 @@ def evaluate_pairwise_raw_grid(
             dtype=np.int64,
         )
 
-        source_indices = (
-            row_indices,
-            column_indices,
+        first_spec = (
+            model.feature_specs[0]
         )
 
-        for (
-            spec,
-            source
-        ) in zip(
-            model.feature_specs,
-            source_indices,
-        ):
-            if spec.kind == "numeric":
-                numeric[
-                    :,
-                    spec.transformed_index,
-                ] = (
-                    reference_data
-                    .numeric[
-                        source,
-                        spec.transformed_index,
-                    ]
-                )
+        second_spec = (
+            model.feature_specs[1]
+        )
 
-                numeric_missing[
-                    :,
-                    spec.transformed_index,
-                ] = (
-                    reference_data
-                    .numeric_missing[
-                        source,
-                        spec.transformed_index,
-                    ]
-                )
+        if first_spec.kind == "numeric":
+            numeric[
+                :,
+                first_spec.transformed_index,
+            ] = (
+                row_data
+                .numeric[
+                    row_indices,
+                    first_spec.transformed_index,
+                ]
+            )
 
-            else:
-                categorical[
-                    :,
-                    spec.transformed_index,
-                ] = (
-                    reference_data
-                    .categorical[
-                        source,
-                        spec.transformed_index,
-                    ]
-                )
+            numeric_missing[
+                :,
+                first_spec.transformed_index,
+            ] = (
+                row_data
+                .numeric_missing[
+                    row_indices,
+                    first_spec.transformed_index,
+                ]
+            )
+
+        else:
+            categorical[
+                :,
+                first_spec.transformed_index,
+            ] = (
+                row_data
+                .categorical[
+                    row_indices,
+                    first_spec.transformed_index,
+                ]
+            )
+
+        if second_spec.kind == "numeric":
+            numeric[
+                :,
+                second_spec.transformed_index,
+            ] = (
+                column_data
+                .numeric[
+                    column_indices,
+                    second_spec.transformed_index,
+                ]
+            )
+
+            numeric_missing[
+                :,
+                second_spec.transformed_index,
+            ] = (
+                column_data
+                .numeric_missing[
+                    column_indices,
+                    second_spec.transformed_index,
+                ]
+            )
+
+        else:
+            categorical[
+                :,
+                second_spec.transformed_index,
+            ] = (
+                column_data
+                .categorical[
+                    column_indices,
+                    second_spec.transformed_index,
+                ]
+            )
 
         prediction = model(
             numeric=torch.from_numpy(
@@ -375,6 +484,37 @@ def evaluate_pairwise_raw_grid(
         )
 
     return predictions.reshape(
-        m,
-        m,
+        n_rows,
+        n_columns,
+    )
+
+
+@torch.no_grad()
+def evaluate_pairwise_raw_grid(
+    model: PairwiseResidualNetwork,
+    reference_data: TransformedTabular,
+    *,
+    batch_size: int = 8192,
+    device: Optional[
+        torch.device
+    ] = None,
+) -> np.ndarray:
+    """
+    Evaluate:
+
+        h_jk(x_j_i, x_k_m)
+
+    for every pair of observations in one common reference support.
+
+    Returns
+    -------
+    np.ndarray
+        Square matrix of shape [M, M].
+    """
+    return evaluate_pairwise_cross_grid(
+        model=model,
+        row_data=reference_data,
+        column_data=reference_data,
+        batch_size=batch_size,
+        device=device,
     )
