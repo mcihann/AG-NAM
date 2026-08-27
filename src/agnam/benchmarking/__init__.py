@@ -11,6 +11,15 @@ from agnam.benchmarking.synthetic_protocol import (
     records_to_frame,
     save_records_csv,
 )
+from agnam.benchmarking.synthetic_runner import (
+    ModelEvaluation,
+    SingleSyntheticBenchmarkResult,
+    SyntheticModelConfig,
+    generate_synthetic_scenario,
+    normalize_pairs,
+    run_single_synthetic_benchmark,
+    sample_random_pairs,
+)
 
 __all__ = [
     "PairSetRecovery",
@@ -24,4 +33,11 @@ __all__ = [
     "evaluate_pair_set_recovery",
     "records_to_frame",
     "save_records_csv",
+    "ModelEvaluation",
+    "SingleSyntheticBenchmarkResult",
+    "SyntheticModelConfig",
+    "generate_synthetic_scenario",
+    "normalize_pairs",
+    "run_single_synthetic_benchmark",
+    "sample_random_pairs",
 ]
