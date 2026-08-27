@@ -1,3 +1,21 @@
+from agnam.benchmarking.batch_runner import (
+    BatchExecutionSummary,
+    build_pair_audit_frame,
+    clear_failure,
+    failures_path,
+    master_results_path,
+    realization_pairs_path,
+    realization_record_path,
+    rebuild_master_table,
+    rebuild_scenario_summary,
+    record_failure,
+    run_synthetic_batch,
+    scenario_summary_path,
+    select_schedule,
+    summarize_master_table,
+    validate_completed_realization,
+    write_realization_outputs,
+)
 from agnam.benchmarking.synthetic_protocol import (
     PairSetRecovery,
     SyntheticBenchmarkProtocol,
@@ -21,7 +39,24 @@ from agnam.benchmarking.synthetic_runner import (
     sample_random_pairs,
 )
 
+
 __all__ = [
+    "BatchExecutionSummary",
+    "build_pair_audit_frame",
+    "clear_failure",
+    "failures_path",
+    "master_results_path",
+    "realization_pairs_path",
+    "realization_record_path",
+    "rebuild_master_table",
+    "rebuild_scenario_summary",
+    "record_failure",
+    "run_synthetic_batch",
+    "scenario_summary_path",
+    "select_schedule",
+    "summarize_master_table",
+    "validate_completed_realization",
+    "write_realization_outputs",
     "PairSetRecovery",
     "SyntheticBenchmarkProtocol",
     "SyntheticBenchmarkRecord",
