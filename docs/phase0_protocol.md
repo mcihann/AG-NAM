@@ -584,3 +584,85 @@ This first-look experiment is a methodological sanity audit and is not
 
 a substitute for the final 20-realization synthetic benchmark.
 
+
+
+\## Selection reproducibility implementation
+
+
+
+Primary interaction-selection reproducibility uses five repeated
+
+discovery runs:
+
+
+
+B = 5
+
+
+
+The predefined run seeds are:
+
+
+
+42, 43, 44, 45, 46
+
+
+
+Each run independently applies the locked:
+
+
+
+\- 60% proposer-training partition
+
+\- 20% proposer-validation partition
+
+\- 20% untouched interaction-scoring partition
+
+
+
+The interaction-scoring method and candidate-set size remain unchanged
+
+across runs.
+
+
+
+For each interaction (j,k):
+
+
+
+pi\_jk = number of Top-K selections / B
+
+
+
+The primary acceptance threshold is:
+
+
+
+pi\_jk >= 0.60
+
+
+
+Thus, with B = 5, an interaction must appear in the Top-K candidate
+
+set in at least three runs.
+
+
+
+Full interaction ranks are retained in every run, including when an
+
+interaction falls outside Top-K. No artificial rank such as K+1 is
+
+assigned.
+
+
+
+Mean pairwise Jaccard similarity between Top-K sets is reported as a
+
+global diagnostic of candidate-set reproducibility.
+
+
+
+Selection probability is the primary criterion; mean and median ranks
+
+are descriptive diagnostics only.
+
