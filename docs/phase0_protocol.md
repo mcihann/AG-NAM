@@ -524,3 +524,63 @@ Thus, proposer-validation observations cannot influence the residual
 
 targets used for proposer optimization.
 
+
+
+\## Synthetic first-look interaction audit
+
+
+
+Before inspecting interaction-recovery results, the S1 first-look
+
+protocol is fixed as follows:
+
+
+
+\- 60% proposer-training subset
+
+\- 20% proposer early-stopping validation subset
+
+\- 20% untouched interaction-scoring holdout subset
+
+\- stratified partitioning
+
+\- fixed seed = 42
+
+
+
+Residual targets for proposer training and early stopping are
+
+constructed without access to the interaction-scoring holdout.
+
+
+
+The trained proposer is applied to the untouched scoring holdout
+
+without using target labels.
+
+
+
+Interaction scores are computed using the predefined residual-sensitive
+
+attention attribution:
+
+
+
+|A\_jk \* d(r\_hat) / d(A\_jk)|
+
+
+
+Ground-truth synthetic interactions are used only after ranking has
+
+been produced, solely for evaluation.
+
+
+
+The predefined S1 candidate-set rule gives K = 19 for p = 20.
+
+
+
+This first-look experiment is a methodological sanity audit and is not
+
+a substitute for the final 20-realization synthetic benchmark.
+
