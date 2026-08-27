@@ -782,3 +782,61 @@ ISR\_jk >= 0.60
 
 Neither threshold may be changed based on S1 first-look results.
 
+
+
+\## Pairwise surface model configuration
+
+
+
+The explicit pairwise residual networks used for ISR are fixed before
+
+inspection of ISR results.
+
+
+
+Architecture:
+
+
+
+\- feature embedding dimension = 16
+
+\- hidden width = 64
+
+\- hidden depth = 2
+
+\- activation = SiLU
+
+\- dropout = 0.10
+
+
+
+Optimization:
+
+
+
+\- loss = mean squared error
+
+\- optimizer = AdamW
+
+\- learning rate = 1e-3
+
+\- weight decay = 1e-5
+
+\- batch size = 256
+
+\- maximum epochs = 200
+
+\- early-stopping patience = 20
+
+
+
+Each pairwise model is trained on the leakage-safe residual targets
+
+associated with the corresponding discovery run.
+
+
+
+The pairwise model is not itself treated as an explanation until
+
+functional-ANOVA purification has been applied.
+
