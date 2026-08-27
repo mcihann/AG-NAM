@@ -33,17 +33,30 @@ from agnam.training.proposer_trainer import (
 from agnam.training.residual_targets import (
     generate_train_validation_residual_targets,
 )
-from agnam.utils.reproducibility import seed_everything
+from agnam.utils.reproducibility import (
+    seed_everything,
+)
 
 
 @dataclass
 class InteractionDiscoveryRun:
+    """
+    Result of one complete interaction-discovery resampling run.
+
+    The stored residual targets are required by the subsequent
+    pairwise-surface / ISR stage so that they do not need to be
+    regenerated using a potentially different split or seed.
+    """
+
     run_index: int
     seed: int
 
     train_indices: np.ndarray
     validation_indices: np.ndarray
     scoring_indices: np.ndarray
+
+    train_residuals: np.ndarray
+    validation_residuals: np.ndarray
 
     k: int
 
@@ -65,13 +78,15 @@ class InteractionDiscoveryRun:
             )
             for item in (
                 self.score_result
-                .ranked_interactions[:self.k]
+                .ranked_interactions[: self.k]
             )
         )
 
 
 @dataclass
 class ReproducibleDiscoveryResult:
+    """Container for repeated interaction-discovery runs."""
+
     runs: tuple[
         InteractionDiscoveryRun,
         ...
@@ -84,6 +99,7 @@ def _with_seed_nam_config(
     config: NAMTrainingConfig,
     seed: int,
 ) -> NAMTrainingConfig:
+    """Copy a NAM training configuration with a run-specific seed."""
     return NAMTrainingConfig(
         learning_rate=config.learning_rate,
         weight_decay=config.weight_decay,
@@ -100,6 +116,7 @@ def _with_seed_proposer_config(
     config: ProposerTrainingConfig,
     seed: int,
 ) -> ProposerTrainingConfig:
+    """Copy a proposer configuration with a run-specific seed."""
     return ProposerTrainingConfig(
         learning_rate=config.learning_rate,
         weight_decay=config.weight_decay,
@@ -141,6 +158,9 @@ def run_single_interaction_discovery(
         60% proposer training
         20% proposer validation
         20% untouched interaction-scoring holdout
+
+    Training and validation residual targets are retained in the
+    returned object for later pairwise-surface / ISR analysis.
     """
     if not isinstance(
         X,
@@ -180,14 +200,14 @@ def run_single_interaction_discovery(
         )
 
     nam_config = _with_seed_nam_config(
-        nam_config,
-        seed,
+        config=nam_config,
+        seed=seed,
     )
 
     proposer_config = (
         _with_seed_proposer_config(
-            proposer_config,
-            seed,
+            config=proposer_config,
+            seed=seed,
         )
     )
 
@@ -257,6 +277,10 @@ def run_single_interaction_discovery(
         validation_indices
     ]
 
+    # ---------------------------------------------------------
+    # Leakage-safe residual targets
+    # ---------------------------------------------------------
+
     residual_targets = (
         generate_train_validation_residual_targets(
             X_train=X_train,
@@ -283,6 +307,10 @@ def run_single_interaction_discovery(
         )
     )
 
+    # ---------------------------------------------------------
+    # Proposer preprocessing
+    # ---------------------------------------------------------
+
     preprocessor = TabularPreprocessor(
         numeric_features=numeric_features,
         categorical_features=categorical_features,
@@ -305,6 +333,10 @@ def run_single_interaction_discovery(
             X_scoring
         )
     )
+
+    # ---------------------------------------------------------
+    # Residual attention proposer
+    # ---------------------------------------------------------
 
     seed_everything(
         seed,
@@ -343,6 +375,10 @@ def run_single_interaction_discovery(
         )
     )
 
+    # ---------------------------------------------------------
+    # Interaction scoring on untouched holdout
+    # ---------------------------------------------------------
+
     score_result = (
         compute_interaction_scores(
             model=proposer,
@@ -370,6 +406,16 @@ def run_single_interaction_discovery(
         ),
         scoring_indices=(
             scoring_indices.copy()
+        ),
+        train_residuals=(
+            residual_targets
+            .train_residuals
+            .copy()
+        ),
+        validation_residuals=(
+            residual_targets
+            .validation_residuals
+            .copy()
         ),
         k=k,
         score_result=score_result,
@@ -402,6 +448,10 @@ def run_reproducible_interaction_discovery(
     proposer_config: ProposerTrainingConfig | None = None,
     device: torch.device | None = None,
 ) -> ReproducibleDiscoveryResult:
+    """
+    Run B repeated interaction-discovery pipelines and summarize
+    Top-K selection reproducibility.
+    """
     if n_runs < 1:
         raise ValueError(
             "n_runs must be at least 1."
@@ -411,7 +461,7 @@ def run_reproducible_interaction_discovery(
         InteractionDiscoveryRun
     ] = []
 
-    # Predefined seed schedule:
+    # Locked primary schedule:
     # base_seed, base_seed + 1, ...
     for run_index in range(
         n_runs
