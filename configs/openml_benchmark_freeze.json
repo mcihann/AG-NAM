@@ -1,0 +1,301 @@
+{
+  "benchmark_id": "agnam_openml_primary_v1",
+  "status": "FROZEN",
+  "n_locked_tasks": 28,
+  "n_complete_tasks": 28,
+  "primary_metric": "AUROC",
+  "primary_comparison": "AG-NAM vs Main NAM",
+  "primary_mean_difference": 0.0024368688765376172,
+  "primary_p_value": 0.17626953125,
+  "primary_reject": false,
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 20260907,
+  "alpha": 0.05,
+  "evidence_files": [
+    {
+      "path": "results/openml/benchmark/master_results.csv",
+      "bytes": 23506,
+      "sha256": "bbbe32f709bf19805b28190cdef9f2db9ea209d045dc55d9084fb1a4ba0e130d"
+    },
+    {
+      "path": "results/openml/benchmark/task_49.csv",
+      "bytes": 2001,
+      "sha256": "89855afc07fba285a2169f307b0108cc559cbfb2ff6f6ffa1e2db215b32a479d"
+    },
+    {
+      "path": "results/openml/benchmark/task_49_pairs.csv",
+      "bytes": 472,
+      "sha256": "c6c6a044172ab7cbb22e4995fa2a49a1932ff893ba28ce9d9c8afdd6b7229038"
+    },
+    {
+      "path": "results/openml/benchmark/task_3.csv",
+      "bytes": 2092,
+      "sha256": "732ca752d6741dd84329b2c46173e77ffb47fef0a4c54972cb4782eff57d7f28"
+    },
+    {
+      "path": "results/openml/benchmark/task_3_pairs.csv",
+      "bytes": 1407,
+      "sha256": "786c246569d59de78113561642744cc99c3fe5a2f87d959f936bc8a5f3bbcc7e"
+    },
+    {
+      "path": "results/openml/benchmark/task_14952.csv",
+      "bytes": 2126,
+      "sha256": "8e297fa1c740c06034d39ac5798de6382590b1df8e3d4b1fc08a032207864cb3"
+    },
+    {
+      "path": "results/openml/benchmark/task_14952_pairs.csv",
+      "bytes": 2039,
+      "sha256": "d4d4333eeca8c45b2c709418c6b9ead34483e03aefa703e7864eced0e54f8fdc"
+    },
+    {
+      "path": "results/openml/benchmark/task_125920.csv",
+      "bytes": 2022,
+      "sha256": "4e6dfd515dd802a99d6cf264ba993ecc52b940b885fc739612c33a32bafb39d2"
+    },
+    {
+      "path": "results/openml/benchmark/task_125920_pairs.csv",
+      "bytes": 394,
+      "sha256": "0ef49ce4d6f1cecce07ce7dca8164123537580f8cca8aa8586296d1c42c11b57"
+    },
+    {
+      "path": "results/openml/benchmark/task_14954.csv",
+      "bytes": 2052,
+      "sha256": "216cb59a6e16a6c16a9036e05e67757f9fc9c4dc61d2bb77e3578bebdd266f75"
+    },
+    {
+      "path": "results/openml/benchmark/task_14954_pairs.csv",
+      "bytes": 1278,
+      "sha256": "89c6507d872afd20b0dfd38698be28da5eb8b3c0cf66f0d70324b354960fce79"
+    },
+    {
+      "path": "results/openml/benchmark/task_9971.csv",
+      "bytes": 2003,
+      "sha256": "8770dd0b099f2de50f6313913ec8fb53522cf82885968a0f9b721c07bd821385"
+    },
+    {
+      "path": "results/openml/benchmark/task_9971_pairs.csv",
+      "bytes": 318,
+      "sha256": "32a5af524d9c92b6602f60c6490ece78e8754843481bdd859b22997a77b375a4"
+    },
+    {
+      "path": "results/openml/benchmark/task_29.csv",
+      "bytes": 2042,
+      "sha256": "182eea5fcca6465ad024336727fd7427ad0bb00a16fb6eeea07a0050eab9860c"
+    },
+    {
+      "path": "results/openml/benchmark/task_29_pairs.csv",
+      "bytes": 619,
+      "sha256": "055de21e63c1475f655cf575efffb0e4ab0372ad22c9bece85211f6a811ba640"
+    },
+    {
+      "path": "results/openml/benchmark/task_31.csv",
+      "bytes": 2008,
+      "sha256": "796f85a00d3fafad913ee7efe9560335f392838d5746a80866158b0016f6a47d"
+    },
+    {
+      "path": "results/openml/benchmark/task_31_pairs.csv",
+      "bytes": 1229,
+      "sha256": "9b0c783c2ee2743b0f04d6a1d3ee973e18ce70eed7abb13d871df6912e1fc4b9"
+    },
+    {
+      "path": "results/openml/benchmark/task_3021.csv",
+      "bytes": 2109,
+      "sha256": "6e04e31d9f10ebaf86d9c18110a658d6655e619d66eb825a2c0d00811adf6130"
+    },
+    {
+      "path": "results/openml/benchmark/task_3021_pairs.csv",
+      "bytes": 1494,
+      "sha256": "8732a5c177ccabf930aae10f07464f393b7b085f805f760767f4fbc356bc78a6"
+    },
+    {
+      "path": "results/openml/benchmark/task_167141.csv",
+      "bytes": 2091,
+      "sha256": "2eefa396db83a1d63c566788e968283001dae51050d30702116076bb9a41165c"
+    },
+    {
+      "path": "results/openml/benchmark/task_167141_pairs.csv",
+      "bytes": 2133,
+      "sha256": "e7b237c3fc3577c2eae2909ef39802517ae0f795a377896339d775a4fd5c178b"
+    },
+    {
+      "path": "results/openml/benchmark/task_14965.csv",
+      "bytes": 2115,
+      "sha256": "02821ab4f96e352a4f03a5bbfc0b03cacad1351678bc8576b2051e8402b5a004"
+    },
+    {
+      "path": "results/openml/benchmark/task_14965_pairs.csv",
+      "bytes": 840,
+      "sha256": "811412ca8d0fc878b2b2e94840b9bc075aa19f641c7c495108cafae6f5a5d77e"
+    },
+    {
+      "path": "results/openml/benchmark/task_219.csv",
+      "bytes": 2073,
+      "sha256": "67f14c03f49f5abd6d033bc42f63c1d7544cf84e8e6eae065ceb08eae0991146"
+    },
+    {
+      "path": "results/openml/benchmark/task_219_pairs.csv",
+      "bytes": 436,
+      "sha256": "0174c6030cf505777c7a59e3b300f1998b743c8c3809cabc59b31a8113c9bd22"
+    },
+    {
+      "path": "results/openml/benchmark/task_7592.csv",
+      "bytes": 2120,
+      "sha256": "5a098a7c4a33e3df8393b4d70b5c3bcdba113ac2498ac6627a8306f45638210c"
+    },
+    {
+      "path": "results/openml/benchmark/task_7592_pairs.csv",
+      "bytes": 826,
+      "sha256": "acc6f9b6777cfcc1856774c949b6fa41b2cc835721dc34020cd71d16966c4d4a"
+    },
+    {
+      "path": "results/openml/benchmark/task_3913.csv",
+      "bytes": 2033,
+      "sha256": "294f737fb5de9d375be134369878621021c307bc1fd29615d58e4c894f20ee7d"
+    },
+    {
+      "path": "results/openml/benchmark/task_3913_pairs.csv",
+      "bytes": 956,
+      "sha256": "cd9999170fcaa5111668acae31e27186b28cd738b871a2ea1f3feb7153397a0d"
+    },
+    {
+      "path": "results/openml/benchmark/task_146819.csv",
+      "bytes": 1877,
+      "sha256": "0780362b43ac8c147274793b7a3a22d051907abb518e775b5cd9f4c578e97ac7"
+    },
+    {
+      "path": "results/openml/benchmark/task_146819_pairs.csv",
+      "bytes": 1272,
+      "sha256": "a94e367f30f25161e74177a5e29842d60331329a5f2c143b462849f1fba223f8"
+    },
+    {
+      "path": "results/openml/benchmark/task_9946.csv",
+      "bytes": 1857,
+      "sha256": "0a7515e598b600453dffa14459a6814f447b3d92027b72082972569a57b30593"
+    },
+    {
+      "path": "results/openml/benchmark/task_9946_pairs.csv",
+      "bytes": 901,
+      "sha256": "b7958cfd05b1890a619a68168317d045be9cb552826baa1a0e469f16cc729e62"
+    },
+    {
+      "path": "results/openml/benchmark/task_15.csv",
+      "bytes": 2119,
+      "sha256": "d7cabc2f04c5c3c3580753512f3772598cc61533c5c02ae0c0732ca253d22dee"
+    },
+    {
+      "path": "results/openml/benchmark/task_15_pairs.csv",
+      "bytes": 495,
+      "sha256": "769c8fa964e39482f4cf5eb3e82976aaebc299484ba9e9920cb916cd0dd29a6a"
+    },
+    {
+      "path": "results/openml/benchmark/task_37.csv",
+      "bytes": 2032,
+      "sha256": "fb31583c72b5a67a25c103674df62ad7c8adceb04beb388e7b0f716be608f159"
+    },
+    {
+      "path": "results/openml/benchmark/task_37_pairs.csv",
+      "bytes": 333,
+      "sha256": "2832f638ec90e9839ea44cd72e940ec6a1bbbad77606d63286021380321d5e3e"
+    },
+    {
+      "path": "results/openml/benchmark/task_9957.csv",
+      "bytes": 2005,
+      "sha256": "290eb46f011a522cac4f3843692290edf23ed1a091abfe081e9f290e20c269a9"
+    },
+    {
+      "path": "results/openml/benchmark/task_9957_pairs.csv",
+      "bytes": 906,
+      "sha256": "b342c4fd2362ab066ab94196df4364f7056093371fe675f54505df3fe4f2bf94"
+    },
+    {
+      "path": "results/openml/benchmark/task_3918.csv",
+      "bytes": 2082,
+      "sha256": "f9f2eb42ddb437cace6208cca577669715cd9ad38ee1cd126a7af7b97a744994"
+    },
+    {
+      "path": "results/openml/benchmark/task_3918_pairs.csv",
+      "bytes": 1232,
+      "sha256": "b377dd689da5f95d1f1c85b948d80bf5204887c426d8d233fc0d16cfd4bae0e3"
+    },
+    {
+      "path": "results/openml/benchmark/task_3902.csv",
+      "bytes": 2017,
+      "sha256": "67bf78718d67eaf066b2c660f437cd15ca4d563d303c1158ea4314eafb14394e"
+    },
+    {
+      "path": "results/openml/benchmark/task_3902_pairs.csv",
+      "bytes": 1358,
+      "sha256": "df2cdaf2a762990c8b65c971f9f096e649696df37a3c5bc4c69267e083605aab"
+    },
+    {
+      "path": "results/openml/benchmark/task_3903.csv",
+      "bytes": 2036,
+      "sha256": "ddec163231a5491b5c050fa7bf697200be1673fd9b06a48ee3f8b2dd95dbe1e3"
+    },
+    {
+      "path": "results/openml/benchmark/task_3903_pairs.csv",
+      "bytes": 1417,
+      "sha256": "0fa8f9b4b1ba26f1f15a92557899d28d3773ebec0e35bcb6036d99ae28b15f83"
+    },
+    {
+      "path": "results/openml/benchmark/task_3917.csv",
+      "bytes": 2122,
+      "sha256": "3cd6e542fd8ab44b13f6473ccb9663df609d4e3f998f29a3cc782ea745c7409f"
+    },
+    {
+      "path": "results/openml/benchmark/task_3917_pairs.csv",
+      "bytes": 984,
+      "sha256": "47428500a613999ea57864088a7cd0479f928edde4d264e1a5c7953d8ba52d12"
+    },
+    {
+      "path": "results/openml/benchmark/task_9978.csv",
+      "bytes": 1991,
+      "sha256": "4da01a7ae9b1a0bc79f856a0b0cbd5a870441e5cbcabc2e5235fc55f91528a3c"
+    },
+    {
+      "path": "results/openml/benchmark/task_9978_pairs.csv",
+      "bytes": 889,
+      "sha256": "3b398b850025aefb2fc1bdd9d37b016e26291b52d27735868805b702fdd6b89a"
+    },
+    {
+      "path": "results/openml/benchmark/task_43.csv",
+      "bytes": 2020,
+      "sha256": "e389e292cb5e39d7e47de3325843a1bf5aa4a21efa8b8cba86fa7d0eb22f737f"
+    },
+    {
+      "path": "results/openml/benchmark/task_43_pairs.csv",
+      "bytes": 1413,
+      "sha256": "aa03ebdb21c1384eb18f57533247e407377c6f345b8d97640dc5b0413d977184"
+    },
+    {
+      "path": "results/openml/benchmark/task_146820.csv",
+      "bytes": 2033,
+      "sha256": "3a4fa8ad6ef38a74f84b9ce9a254ef3fe0e46d3cceb63c003d21c95c3ab519d2"
+    },
+    {
+      "path": "results/openml/benchmark/task_146820_pairs.csv",
+      "bytes": 356,
+      "sha256": "caddff52f8ecf743086f363e3d560cbad9cbe3ec8bfaf7e9fd6cf5e1b20b91af"
+    },
+    {
+      "path": "results/openml/benchmark/task_9952.csv",
+      "bytes": 2063,
+      "sha256": "9af8a11461690e511da68cff2fd959e744f59c7cefed5aeaae3f449cb1e4982a"
+    },
+    {
+      "path": "results/openml/benchmark/task_9952_pairs.csv",
+      "bytes": 379,
+      "sha256": "e0fca2633c8f19d404326e18385a76312de5cf9f851600c5dcb82ca5d74ec3bf"
+    },
+    {
+      "path": "results/openml/benchmark/task_3904.csv",
+      "bytes": 2126,
+      "sha256": "e2a929b1ace1f72eca9f2e391bb4a5424c9ea5f3f4c05f5228871ad4a1d7647e"
+    },
+    {
+      "path": "results/openml/benchmark/task_3904_pairs.csv",
+      "bytes": 1316,
+      "sha256": "43b6d18119f509aaaaf8a80845d23434e1c7154803d85fe72cde9615b5981e47"
+    }
+  ]
+}
