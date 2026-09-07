@@ -26,7 +26,9 @@ class StatisticalAnalysisProtocol:
 
     primary_metric: str = "auroc"
 
-    def __post_init__(self) -> None:
+    def __post_init__(
+        self,
+    ) -> None:
         if not 0.0 < self.alpha < 1.0:
             raise ValueError(
                 "alpha must lie in (0, 1)."
@@ -137,7 +139,9 @@ def validate_master_against_schedule(
     correspond exactly to its predefined scenario-realization entry.
     """
     if protocol is None:
-        protocol = SyntheticBenchmarkProtocol()
+        protocol = (
+            SyntheticBenchmarkProtocol()
+        )
 
     if len(master) == 0:
         raise ValueError(
@@ -178,8 +182,10 @@ def validate_master_against_schedule(
             f"{duplicates.to_string(index=False)}"
         )
 
-    schedule = build_synthetic_schedule(
-        protocol
+    schedule = (
+        build_synthetic_schedule(
+            protocol
+        )
     )
 
     lookup = {
@@ -194,8 +200,12 @@ def validate_master_against_schedule(
         index=False
     ):
         key = (
-            str(row.scenario),
-            int(row.realization_index),
+            str(
+                row.scenario
+            ),
+            int(
+                row.realization_index
+            ),
         )
 
         if key not in lookup:
@@ -203,18 +213,43 @@ def validate_master_against_schedule(
                 f"Unknown benchmark realization: {key}"
             )
 
-        specification = lookup[key]
+        specification = (
+            lookup[
+                key
+            ]
+        )
 
         expected = {
-            "dataset_seed": specification.dataset_seed,
-            "outer_split_seed": specification.outer_split_seed,
-            "final_split_seed": specification.final_split_seed,
-            "discovery_base_seed": specification.discovery_base_seed,
-            "random_pair_seed": specification.random_pair_seed,
-            "final_model_seed": specification.final_model_seed,
+            "dataset_seed": (
+                specification
+                .dataset_seed
+            ),
+            "outer_split_seed": (
+                specification
+                .outer_split_seed
+            ),
+            "final_split_seed": (
+                specification
+                .final_split_seed
+            ),
+            "discovery_base_seed": (
+                specification
+                .discovery_base_seed
+            ),
+            "random_pair_seed": (
+                specification
+                .random_pair_seed
+            ),
+            "final_model_seed": (
+                specification
+                .final_model_seed
+            ),
         }
 
-        for column, expected_value in expected.items():
+        for (
+            column,
+            expected_value,
+        ) in expected.items():
             actual_value = int(
                 getattr(
                     row,
@@ -222,11 +257,15 @@ def validate_master_against_schedule(
                 )
             )
 
-            if actual_value != expected_value:
+            if (
+                actual_value
+                != expected_value
+            ):
                 raise ValueError(
-                    f"Seed mismatch for {key}, {column}: "
-                    f"expected {expected_value}, "
-                    f"found {actual_value}."
+                    f"Seed mismatch for {key}, "
+                    f"{column}: expected "
+                    f"{expected_value}, found "
+                    f"{actual_value}."
                 )
 
 
@@ -239,13 +278,19 @@ def benchmark_completion_table(
     Report completion status for every synthetic scenario.
     """
     if protocol is None:
-        protocol = SyntheticBenchmarkProtocol()
+        protocol = (
+            SyntheticBenchmarkProtocol()
+        )
 
     rows = []
 
-    for scenario in protocol.scenarios:
+    for scenario in (
+        protocol.scenarios
+    ):
         scenario_rows = master[
-            master["scenario"]
+            master[
+                "scenario"
+            ]
             == scenario
         ]
 
@@ -256,13 +301,16 @@ def benchmark_completion_table(
                 ],
                 errors="raise",
             )
-            .astype(int)
+            .astype(
+                int
+            )
             .tolist()
         )
 
         expected_indices = set(
             range(
-                protocol.n_realizations
+                protocol
+                .n_realizations
             )
         )
 
@@ -278,25 +326,38 @@ def benchmark_completion_table(
 
         rows.append(
             {
-                "scenario": scenario,
+                "scenario": (
+                    scenario
+                ),
                 "completed": len(
                     completed_indices
                     & expected_indices
                 ),
                 "expected": (
-                    protocol.n_realizations
+                    protocol
+                    .n_realizations
                 ),
                 "is_complete": (
                     completed_indices
                     == expected_indices
                 ),
-                "missing_realizations": "|".join(
-                    str(index + 1)
-                    for index in missing
+                "missing_realizations": (
+                    "|".join(
+                        str(
+                            index + 1
+                        )
+                        for index
+                        in missing
+                    )
                 ),
-                "unexpected_indices": "|".join(
-                    str(index)
-                    for index in unexpected
+                "unexpected_indices": (
+                    "|".join(
+                        str(
+                            index
+                        )
+                        for index
+                        in unexpected
+                    )
                 ),
             }
         )
@@ -313,7 +374,10 @@ def paired_bootstrap_ci(
     resamples: int = 10_000,
     seed: int = 20_260_902,
     alpha: float = 0.05,
-) -> tuple[float, float]:
+) -> tuple[
+    float,
+    float,
+]:
     """
     Percentile paired-bootstrap confidence interval.
 
@@ -354,17 +418,21 @@ def paired_bootstrap_ci(
             "resamples must be positive."
         )
 
-    rng = np.random.default_rng(
-        seed
+    rng = (
+        np.random.default_rng(
+            seed
+        )
     )
 
-    sampled_indices = rng.integers(
-        0,
-        len(values),
-        size=(
-            resamples,
+    sampled_indices = (
+        rng.integers(
+            0,
             len(values),
-        ),
+            size=(
+                resamples,
+                len(values),
+            ),
+        )
     )
 
     sampled = values[
@@ -433,7 +501,9 @@ def paired_rank_biserial(
         ~np.isclose(
             values,
             0.0,
-            atol=zero_tolerance,
+            atol=(
+                zero_tolerance
+            ),
             rtol=0.0,
         )
     ]
@@ -517,7 +587,9 @@ def holm_adjust(
     )
 
     if number == 0:
-        return values.copy()
+        return (
+            values.copy()
+        )
 
     order = np.argsort(
         values
@@ -529,7 +601,10 @@ def holm_adjust(
 
     running_maximum = 0.0
 
-    for position, index in enumerate(
+    for (
+        position,
+        index,
+    ) in enumerate(
         order
     ):
         multiplier = (
@@ -577,7 +652,9 @@ def _wilcoxon_two_sided(
         ~np.isclose(
             values,
             0.0,
-            atol=zero_tolerance,
+            atol=(
+                zero_tolerance
+            ),
             rtol=0.0,
         )
     ]
@@ -634,8 +711,10 @@ def compute_paired_comparison(
         )
 
     required = {
-        comparison.model_a_column,
-        comparison.model_b_column,
+        comparison
+        .model_a_column,
+        comparison
+        .model_b_column,
     }
 
     missing = [
@@ -651,7 +730,8 @@ def compute_paired_comparison(
 
     model_a = pd.to_numeric(
         frame[
-            comparison.model_a_column
+            comparison
+            .model_a_column
         ],
         errors="raise",
     ).to_numpy(
@@ -660,7 +740,8 @@ def compute_paired_comparison(
 
     model_b = pd.to_numeric(
         frame[
-            comparison.model_b_column
+            comparison
+            .model_b_column
         ],
         errors="raise",
     ).to_numpy(
@@ -680,8 +761,12 @@ def compute_paired_comparison(
         )
 
     if not (
-        np.isfinite(model_a).all()
-        and np.isfinite(model_b).all()
+        np.isfinite(
+            model_a
+        ).all()
+        and np.isfinite(
+            model_b
+        ).all()
     ):
         raise ValueError(
             "Paired model metrics must be finite."
@@ -710,8 +795,11 @@ def compute_paired_comparison(
                 ddof=1
             )
         )
+
     else:
-        sd_difference = np.nan
+        sd_difference = (
+            np.nan
+        )
 
     q25_difference = float(
         np.quantile(
@@ -727,43 +815,47 @@ def compute_paired_comparison(
         )
     )
 
-    ci_mean_low, ci_mean_high = (
-        paired_bootstrap_ci(
-            differences,
-            statistic="mean",
-            resamples=(
-                statistical_protocol
-                .bootstrap_resamples
-            ),
-            seed=(
-                statistical_protocol
-                .bootstrap_seed
-                + bootstrap_seed_offset
-            ),
-            alpha=(
-                statistical_protocol.alpha
-            ),
-        )
+    (
+        ci_mean_low,
+        ci_mean_high,
+    ) = paired_bootstrap_ci(
+        differences,
+        statistic="mean",
+        resamples=(
+            statistical_protocol
+            .bootstrap_resamples
+        ),
+        seed=(
+            statistical_protocol
+            .bootstrap_seed
+            + bootstrap_seed_offset
+        ),
+        alpha=(
+            statistical_protocol
+            .alpha
+        ),
     )
 
-    ci_median_low, ci_median_high = (
-        paired_bootstrap_ci(
-            differences,
-            statistic="median",
-            resamples=(
-                statistical_protocol
-                .bootstrap_resamples
-            ),
-            seed=(
-                statistical_protocol
-                .bootstrap_seed
-                + 100_000
-                + bootstrap_seed_offset
-            ),
-            alpha=(
-                statistical_protocol.alpha
-            ),
-        )
+    (
+        ci_median_low,
+        ci_median_high,
+    ) = paired_bootstrap_ci(
+        differences,
+        statistic="median",
+        resamples=(
+            statistical_protocol
+            .bootstrap_resamples
+        ),
+        seed=(
+            statistical_protocol
+            .bootstrap_seed
+            + 100_000
+            + bootstrap_seed_offset
+        ),
+        alpha=(
+            statistical_protocol
+            .alpha
+        ),
     )
 
     (
@@ -788,11 +880,13 @@ def compute_paired_comparison(
     )
 
     wins = (
-        differences > 1e-12
+        differences
+        > 1e-12
     )
 
     losses = (
-        differences < -1e-12
+        differences
+        < -1e-12
     )
 
     n = len(
@@ -800,21 +894,28 @@ def compute_paired_comparison(
     )
 
     return {
-        "scenario": scenario,
+        "scenario": (
+            scenario
+        ),
         "family": (
-            comparison.family
+            comparison
+            .family
         ),
         "comparison_id": (
-            comparison.comparison_id
+            comparison
+            .comparison_id
         ),
         "metric": (
-            comparison.metric
+            comparison
+            .metric
         ),
         "model_a": (
-            comparison.model_a_label
+            comparison
+            .model_a_label
         ),
         "model_b": (
-            comparison.model_b_label
+            comparison
+            .model_b_label
         ),
         "n_pairs": int(
             n
@@ -877,7 +978,7 @@ def compute_paired_comparison(
             / n
         ),
         "p_holm": np.nan,
-        "reject_holm": np.nan,
+        "reject_holm": pd.NA,
         "family_complete": False,
     }
 
@@ -952,8 +1053,12 @@ def analyze_paired_comparisons(
         + SECONDARY_COMPARISONS
     )
 
-    for scenario_index, scenario in enumerate(
-        benchmark_protocol.scenarios
+    for (
+        scenario_index,
+        scenario,
+    ) in enumerate(
+        benchmark_protocol
+        .scenarios
     ):
         scenario_frame = (
             master[
@@ -975,7 +1080,10 @@ def analyze_paired_comparisons(
         ) == 0:
             continue
 
-        for comparison_index, comparison in enumerate(
+        for (
+            comparison_index,
+            comparison,
+        ) in enumerate(
             all_comparisons
         ):
             seed_offset = (
@@ -1013,6 +1121,58 @@ def analyze_paired_comparisons(
     ) == 0:
         return results
 
+    # ---------------------------------------------------------
+    # Explicit inference dtypes
+    # ---------------------------------------------------------
+    #
+    # p_holm is numeric and may be missing for an incomplete
+    # benchmark.
+    #
+    # reject_holm is a nullable Boolean column. Explicitly using
+    # pandas BooleanDtype prevents assigning True/False values into
+    # a float column and therefore avoids pandas incompatible-dtype
+    # FutureWarnings.
+    # ---------------------------------------------------------
+
+    results[
+        "p_holm"
+    ] = pd.to_numeric(
+        results[
+            "p_holm"
+        ],
+        errors="coerce",
+    ).astype(
+        "float64"
+    )
+
+    results[
+        "reject_holm"
+    ] = pd.Series(
+        pd.array(
+            [
+                pd.NA
+            ]
+            * len(
+                results
+            ),
+            dtype="boolean",
+        ),
+        index=(
+            results.index
+        ),
+    )
+
+    results[
+        "family_complete"
+    ] = (
+        results[
+            "family_complete"
+        ]
+        .astype(
+            bool
+        )
+    )
+
     if benchmark_complete:
         for family in (
             "primary",
@@ -1035,21 +1195,33 @@ def analyze_paired_comparisons(
                 )
             )
 
-            adjusted = holm_adjust(
-                p_values
+            adjusted = (
+                holm_adjust(
+                    p_values
+                )
             )
 
             results.loc[
                 family_mask,
                 "p_holm",
-            ] = adjusted
+            ] = (
+                adjusted
+            )
+
+            reject_values = (
+                adjusted
+                < statistical_protocol
+                .alpha
+            )
 
             results.loc[
                 family_mask,
                 "reject_holm",
             ] = (
-                adjusted
-                < statistical_protocol.alpha
+                pd.array(
+                    reject_values,
+                    dtype="boolean",
+                )
             )
 
             results.loc[
@@ -1112,7 +1284,9 @@ def _summarize_values(
                     ddof=1
                 )
             )
-            if len(values) > 1
+            if len(
+                values
+            ) > 1
             else np.nan
         ),
         "median": float(
@@ -1120,8 +1294,12 @@ def _summarize_values(
                 values
             )
         ),
-        "q25": q25,
-        "q75": q75,
+        "q25": (
+            q25
+        ),
+        "q75": (
+            q75
+        ),
         "iqr": float(
             q75
             - q25
@@ -1178,7 +1356,9 @@ def build_diagnostic_summary(
             .copy()
         )
 
-        if len(frame) == 0:
+        if len(
+            frame
+        ) == 0:
             continue
 
         main = pd.to_numeric(
@@ -1208,13 +1388,16 @@ def build_diagnostic_summary(
             dtype=np.float64
         )
 
-        random_pair = pd.to_numeric(
-            frame[
-                "random_pair_auroc"
-            ],
-            errors="raise",
-        ).to_numpy(
-            dtype=np.float64
+        random_pair = (
+            pd.to_numeric(
+                frame[
+                    "random_pair_auroc"
+                ],
+                errors="raise",
+            )
+            .to_numpy(
+                dtype=np.float64
+            )
         )
 
         no_isr = pd.to_numeric(
@@ -1226,40 +1409,52 @@ def build_diagnostic_summary(
             dtype=np.float64
         )
 
-        single_run = pd.to_numeric(
-            frame[
-                "single_run_auroc"
-            ],
-            errors="raise",
-        ).to_numpy(
-            dtype=np.float64
+        single_run = (
+            pd.to_numeric(
+                frame[
+                    "single_run_auroc"
+                ],
+                errors="raise",
+            )
+            .to_numpy(
+                dtype=np.float64
+            )
         )
 
-        selection_count = pd.to_numeric(
-            frame[
-                "n_selection_stable"
-            ],
-            errors="raise",
-        ).to_numpy(
-            dtype=np.float64
+        selection_count = (
+            pd.to_numeric(
+                frame[
+                    "n_selection_stable"
+                ],
+                errors="raise",
+            )
+            .to_numpy(
+                dtype=np.float64
+            )
         )
 
-        retained_count = pd.to_numeric(
-            frame[
-                "n_isr_retained"
-            ],
-            errors="raise",
-        ).to_numpy(
-            dtype=np.float64
+        retained_count = (
+            pd.to_numeric(
+                frame[
+                    "n_isr_retained"
+                ],
+                errors="raise",
+            )
+            .to_numpy(
+                dtype=np.float64
+            )
         )
 
-        candidate_k = pd.to_numeric(
-            frame[
-                "candidate_k"
-            ],
-            errors="raise",
-        ).to_numpy(
-            dtype=np.float64
+        candidate_k = (
+            pd.to_numeric(
+                frame[
+                    "candidate_k"
+                ],
+                errors="raise",
+            )
+            .to_numpy(
+                dtype=np.float64
+            )
         )
 
         oracle_denominator = (
@@ -1268,7 +1463,9 @@ def build_diagnostic_summary(
         )
 
         oracle_capture = np.full(
-            len(frame),
+            len(
+                frame
+            ),
             np.nan,
             dtype=np.float64,
         )
@@ -1296,10 +1493,14 @@ def build_diagnostic_summary(
             ]
         )
 
-        sparsification_selection = np.full(
-            len(frame),
-            np.nan,
-            dtype=np.float64,
+        sparsification_selection = (
+            np.full(
+                len(
+                    frame
+                ),
+                np.nan,
+                dtype=np.float64,
+            )
         )
 
         valid_selection = (
@@ -1321,10 +1522,14 @@ def build_diagnostic_summary(
             )
         )
 
-        sparsification_single = np.full(
-            len(frame),
-            np.nan,
-            dtype=np.float64,
+        sparsification_single = (
+            np.full(
+                len(
+                    frame
+                ),
+                np.nan,
+                dtype=np.float64,
+            )
         )
 
         valid_candidate = (
@@ -1374,11 +1579,14 @@ def build_diagnostic_summary(
             ),
         }
 
-        for metric, values in (
-            diagnostics.items()
-        ):
-            summary = _summarize_values(
-                values
+        for (
+            metric,
+            values,
+        ) in diagnostics.items():
+            summary = (
+                _summarize_values(
+                    values
+                )
             )
 
             rows.append(
@@ -1386,7 +1594,9 @@ def build_diagnostic_summary(
                     "scenario": (
                         scenario
                     ),
-                    "metric": metric,
+                    "metric": (
+                        metric
+                    ),
                     **summary,
                 }
             )
