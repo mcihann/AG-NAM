@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from hashlib import sha256
 import json
 from pathlib import Path
-import textwrap
 
 import matplotlib
 
@@ -1025,7 +1024,7 @@ def create_benchmark_evidence_figure(
         ]
 
         # ---------------------------------------------------------------------
-        # A
+        # PANEL A
         # ---------------------------------------------------------------------
 
         delta = build_primary_delta_plot_data(
@@ -1156,7 +1155,7 @@ def create_benchmark_evidence_figure(
         )
 
         # ---------------------------------------------------------------------
-        # B
+        # PANEL B
         # ---------------------------------------------------------------------
 
         distribution = (
@@ -1240,7 +1239,7 @@ def create_benchmark_evidence_figure(
         )
 
         # ---------------------------------------------------------------------
-        # C
+        # PANEL C
         # ---------------------------------------------------------------------
 
         sparsity = build_sparsity_plot_data(
@@ -1300,7 +1299,7 @@ def create_benchmark_evidence_figure(
         )
 
         # ---------------------------------------------------------------------
-        # D
+        # PANEL D
         # ---------------------------------------------------------------------
 
         feature_types = [
@@ -1417,22 +1416,38 @@ def create_benchmark_evidence_figure(
 
 
 # =============================================================================
-# FIGURE 2 — IMPROVED MANUAL LAYOUT
+# FIGURE 2 — FINAL PUBLICATION TYPOGRAPHY
 # =============================================================================
+
+
+# These overrides affect only visual line breaking.
+# The underlying feature identifiers are NOT modified.
+_DISPLAY_LABEL_OVERRIDES = {
+    "bckgrnd_vdc1": "bckgrnd_\nvdc1",
+    "convect_corr": "convect_\ncorr",
+    "vconst_corr": "vconst_\ncorr",
+    "query_on_thyroxine": "query_on_\nthyroxine",
+    "referral_source": "referral_\nsource",
+}
 
 
 def _wrapped_label(
     label: str,
-    *,
-    width: int = 16,
 ) -> str:
-    return "\n".join(
-        textwrap.wrap(
-            str(label),
-            width=width,
-            break_long_words=False,
-            break_on_hyphens=False,
-        )
+    """
+    Return a publication-friendly display form of a feature label.
+
+    Important:
+    only visual line breaks are introduced. The original feature name
+    remains unchanged in all data structures and exported tables.
+    """
+    label = str(
+        label
+    )
+
+    return _DISPLAY_LABEL_OVERRIDES.get(
+        label,
+        label,
     )
 
 
@@ -1619,12 +1634,17 @@ def _draw_case_network(
         for frequency in frequencies
     ]
 
-    node_size = (
-        2500
-        if specification.task_id
-        != 3
-        else 2200
-    )
+    if specification.task_id == 146819:
+        node_size = 2700
+        node_font_size = 8.2
+
+    elif specification.task_id == 3021:
+        node_size = 2750
+        node_font_size = 8.2
+
+    else:
+        node_size = 2200
+        node_font_size = 8.5
 
     nx.draw_networkx_nodes(
         graph,
@@ -1647,8 +1667,7 @@ def _draw_case_network(
 
     node_labels = {
         node: _wrapped_label(
-            node,
-            width=16,
+            node
         )
         for node in graph.nodes
     }
@@ -1658,12 +1677,7 @@ def _draw_case_network(
         positions,
         labels=node_labels,
         ax=axis,
-        font_size=(
-            8.0
-            if specification.task_id
-            != 3
-            else 8.5
-        ),
+        font_size=node_font_size,
     )
 
     edge_labels = {
