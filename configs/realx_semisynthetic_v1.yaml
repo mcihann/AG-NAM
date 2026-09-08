@@ -1,0 +1,167 @@
+benchmark_id: agnam_realx_semisynthetic_v1
+
+selection_rule:
+  rule: first_lower_median_last_within_feature_type
+  performance_used: false
+  source_registry: locked_28_task_openml_registry
+
+datasets:
+  - task_id: 49
+    dataset_name: tic-tac-toe
+    feature_type: categorical
+    overall_registry_position: 1
+    feature_type_rank: 1
+    feature_type_count: 3
+    selection_anchor: first
+
+  - task_id: 3
+    dataset_name: kr-vs-kp
+    feature_type: categorical
+    overall_registry_position: 2
+    feature_type_rank: 2
+    feature_type_count: 3
+    selection_anchor: lower_median
+
+  - task_id: 14952
+    dataset_name: PhishingWebsites
+    feature_type: categorical
+    overall_registry_position: 3
+    feature_type_rank: 3
+    feature_type_count: 3
+    selection_anchor: last
+
+  - task_id: 125920
+    dataset_name: dresses-sales
+    feature_type: mixed
+    overall_registry_position: 4
+    feature_type_rank: 1
+    feature_type_count: 10
+    selection_anchor: first
+
+  - task_id: 31
+    dataset_name: credit-g
+    feature_type: mixed
+    overall_registry_position: 8
+    feature_type_rank: 5
+    feature_type_count: 10
+    selection_anchor: lower_median
+
+  - task_id: 7592
+    dataset_name: adult
+    feature_type: mixed
+    overall_registry_position: 13
+    feature_type_rank: 10
+    feature_type_count: 10
+    selection_anchor: last
+
+  - task_id: 3913
+    dataset_name: kc2
+    feature_type: numeric
+    overall_registry_position: 14
+    feature_type_rank: 1
+    feature_type_count: 15
+    selection_anchor: first
+
+  - task_id: 3902
+    dataset_name: pc4
+    feature_type: numeric
+    overall_registry_position: 21
+    feature_type_rank: 8
+    feature_type_count: 15
+    selection_anchor: lower_median
+
+  - task_id: 3904
+    dataset_name: jm1
+    feature_type: numeric
+    overall_registry_position: 28
+    feature_type_rank: 15
+    feature_type_count: 15
+    selection_anchor: last
+
+strengths:
+  - name: "null"
+    interaction_coefficient: 0.0
+    active_ground_truth: false
+
+  - name: weak
+    interaction_coefficient: 0.5
+    active_ground_truth: true
+
+  - name: moderate
+    interaction_coefficient: 1.0
+    active_ground_truth: true
+
+  - name: strong
+    interaction_coefficient: 1.5
+    active_ground_truth: true
+
+protocol:
+  n_realizations: 5
+  max_rows: 5000
+
+  train_fraction: 0.60
+  validation_fraction: 0.20
+  test_fraction: 0.20
+
+  n_true_interactions: 3
+  n_main_effects: 3
+  min_eligible_features: 9
+
+  max_states_per_feature: 8
+
+  main_effect_coefficient: 1.0
+  target_expected_prevalence: 0.50
+  link: logistic
+
+  discovery_runs: 5
+  residual_crossfit_folds: 5
+  selection_threshold: 0.60
+  isr_threshold: 0.60
+  candidate_k_rule: min_p_minus_1_20
+
+  base_seed: 26090800
+
+generator:
+  original_labels_used: false
+  preserve_real_X: true
+  missing_values: explicit_missing_state
+
+  numeric_state_encoding: empirical_quantile_states
+  categorical_state_encoding: top_levels_plus_other
+
+  main_effect_surface: centered_random_state_effect
+
+  interaction_surface: gaussian_cell_surface
+  interaction_purification: empirical_weighted_two_way_functional_anova
+
+  component_standardization: unit_standard_deviation
+
+  common_random_numbers_across_strengths: true
+  intercept_calibration: target_expected_prevalence
+
+  purification_tolerance: 1.0e-10
+  purification_max_iterations: 1000
+
+comparators:
+  - Main NAM
+  - Full AG-NAM
+  - Oracle AG-NAM
+  - Random-Pair NAM
+  - No-ISR AG-NAM
+  - Single-Run AG-NAM
+
+statistics:
+  experimental_unit: dataset
+  realization_aggregation: mean_over_5_realizations
+
+  primary_condition: moderate
+  primary_metric: interaction_auprc_minus_random_prevalence
+
+  primary_test: one_sided_wilcoxon_greater
+  alpha: 0.05
+  multiplicity_adjustment: none_single_primary
+
+  bootstrap_resamples: 10000
+  bootstrap_seed: 26090806
+
+  secondary_inference: descriptive_only
