@@ -133,6 +133,13 @@ generator:
 
   interaction_surface: gaussian_cell_surface
   interaction_purification: empirical_weighted_two_way_functional_anova
+  interaction_purification_solver: direct_weighted_least_squares_projection
+
+  interaction_pair_eligibility: positive_empirical_interaction_df
+  minimum_interaction_df: 1
+  interaction_pair_matching: seeded_disjoint_backtracking
+
+  surface_max_attempts: 32
 
   component_standardization: unit_standard_deviation
 

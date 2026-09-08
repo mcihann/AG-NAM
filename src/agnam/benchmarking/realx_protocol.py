@@ -113,7 +113,7 @@ LOCKED_REALX_DATASETS = (
 
 
 # =============================================================================
-# EFFECT-STRENGTH CONDITIONS
+# SIGNAL-STRENGTH CONDITIONS
 # =============================================================================
 
 
@@ -155,9 +155,7 @@ LOCKED_REALX_STRENGTHS = (
 
 @dataclass(frozen=True)
 class RealXProtocol:
-    benchmark_id: str = (
-        "agnam_realx_semisynthetic_v1"
-    )
+    benchmark_id: str = "agnam_realx_semisynthetic_v1"
 
     n_realizations: int = 5
     max_rows: int = 5000
@@ -183,6 +181,13 @@ class RealXProtocol:
 
     base_seed: int = 26_090_800
 
+    interaction_purification_solver: str = (
+        "direct_weighted_least_squares_projection"
+    )
+
+    minimum_interaction_df: int = 1
+    surface_max_attempts: int = 32
+
     purification_tolerance: float = 1e-10
     purification_max_iterations: int = 1000
 
@@ -195,22 +200,14 @@ class RealXProtocol:
     def __post_init__(
         self,
     ) -> None:
-        if (
-            self.n_realizations
-            != 5
-        ):
+        if self.n_realizations != 5:
             raise ValueError(
-                "Real-X v1 requires exactly "
-                "5 realizations."
+                "Real-X v1 requires exactly 5 realizations."
             )
 
-        if (
-            self.max_rows
-            != 5000
-        ):
+        if self.max_rows != 5000:
             raise ValueError(
-                "Real-X v1 max_rows is locked "
-                "to 5000."
+                "Real-X v1 max_rows is locked to 5000."
             )
 
         split_total = (
@@ -226,31 +223,22 @@ class RealXProtocol:
             rtol=0.0,
         ):
             raise ValueError(
-                "Train/validation/test fractions "
-                "must sum to 1."
+                "Train/validation/test fractions must sum to 1."
             )
 
-        if (
-            self.n_true_interactions
-            != 3
-        ):
+        if self.n_true_interactions != 3:
             raise ValueError(
                 "Real-X v1 requires exactly "
                 "3 ground-truth interactions."
             )
 
-        if (
-            self.n_main_effects
-            != 3
-        ):
+        if self.n_main_effects != 3:
             raise ValueError(
-                "Real-X v1 requires exactly "
-                "3 main-effect features."
+                "Real-X v1 requires exactly 3 main-effect features."
             )
 
         required_features = (
-            2
-            * self.n_true_interactions
+            2 * self.n_true_interactions
             + self.n_main_effects
         )
 
@@ -259,18 +247,13 @@ class RealXProtocol:
             < required_features
         ):
             raise ValueError(
-                "min_eligible_features is too "
-                "small for disjoint main and "
-                "interaction features."
+                "min_eligible_features is too small "
+                "for disjoint main and interaction features."
             )
 
-        if (
-            self.max_states_per_feature
-            < 2
-        ):
+        if self.max_states_per_feature < 2:
             raise ValueError(
-                "max_states_per_feature must "
-                "be at least 2."
+                "max_states_per_feature must be at least 2."
             )
 
         if not (
@@ -279,26 +262,17 @@ class RealXProtocol:
             < 1.0
         ):
             raise ValueError(
-                "Target prevalence must lie "
-                "strictly in (0, 1)."
+                "Target prevalence must lie strictly in (0, 1)."
             )
 
-        if (
-            self.discovery_runs
-            != 5
-        ):
+        if self.discovery_runs != 5:
             raise ValueError(
-                "Real-X v1 discovery_runs "
-                "is locked to 5."
+                "Real-X v1 discovery_runs is locked to 5."
             )
 
-        if (
-            self.residual_crossfit_folds
-            != 5
-        ):
+        if self.residual_crossfit_folds != 5:
             raise ValueError(
-                "Real-X v1 residual "
-                "cross-fitting is locked to 5."
+                "Real-X v1 residual cross-fitting is locked to 5."
             )
 
         if not np.isclose(
@@ -308,8 +282,7 @@ class RealXProtocol:
             rtol=0.0,
         ):
             raise ValueError(
-                "Real-X v1 selection threshold "
-                "is locked to 0.60."
+                "Real-X v1 selection threshold is locked to 0.60."
             )
 
         if not np.isclose(
@@ -319,17 +292,31 @@ class RealXProtocol:
             rtol=0.0,
         ):
             raise ValueError(
-                "Real-X v1 ISR threshold "
-                "is locked to 0.60."
+                "Real-X v1 ISR threshold is locked to 0.60."
             )
 
         if (
-            self.primary_strength
-            != "moderate"
+            self.interaction_purification_solver
+            != "direct_weighted_least_squares_projection"
         ):
             raise ValueError(
-                "Real-X v1 primary condition "
-                "is locked to moderate."
+                "Real-X v1 purification solver is locked to "
+                "direct_weighted_least_squares_projection."
+            )
+
+        if self.minimum_interaction_df != 1:
+            raise ValueError(
+                "Real-X v1 minimum interaction df is locked to 1."
+            )
+
+        if self.surface_max_attempts != 32:
+            raise ValueError(
+                "Real-X v1 surface_max_attempts is locked to 32."
+            )
+
+        if self.primary_strength != "moderate":
+            raise ValueError(
+                "Real-X v1 primary condition is locked to moderate."
             )
 
         if not (
@@ -341,31 +328,19 @@ class RealXProtocol:
                 "alpha must lie in (0, 1)."
             )
 
-        if (
-            self.bootstrap_resamples
-            < 1000
-        ):
+        if self.bootstrap_resamples < 1000:
             raise ValueError(
-                "At least 1000 bootstrap "
-                "resamples are required."
+                "At least 1000 bootstrap resamples are required."
             )
 
-        if (
-            self.purification_tolerance
-            <= 0.0
-        ):
+        if self.purification_tolerance <= 0.0:
             raise ValueError(
-                "Purification tolerance must "
-                "be positive."
+                "Purification tolerance must be positive."
             )
 
-        if (
-            self.purification_max_iterations
-            < 1
-        ):
+        if self.purification_max_iterations < 1:
             raise ValueError(
-                "Purification iteration limit "
-                "must be positive."
+                "Purification iteration limit must be positive."
             )
 
 
@@ -405,48 +380,18 @@ def _seed_family(
     dataset_index: int,
     realization: int,
 ) -> dict[str, int]:
-    """
-    Seeds deliberately do not depend on interaction strength.
-
-    Therefore the four signal-strength conditions within one
-    dataset/realization share:
-    - X subset
-    - data split
-    - selected truth features
-    - latent surfaces
-    - Bernoulli uniform random numbers
-
-    Only the interaction coefficient changes.
-    """
     group_seed = (
         protocol.base_seed
-        + dataset_index
-        * 10_000
-        + realization
-        * 100
+        + dataset_index * 10_000
+        + realization * 100
     )
 
     return {
-        "row_sample_seed": (
-            group_seed
-            + 11
-        ),
-        "split_seed": (
-            group_seed
-            + 21
-        ),
-        "feature_seed": (
-            group_seed
-            + 31
-        ),
-        "surface_seed": (
-            group_seed
-            + 41
-        ),
-        "label_seed": (
-            group_seed
-            + 51
-        ),
+        "row_sample_seed": group_seed + 11,
+        "split_seed": group_seed + 21,
+        "feature_seed": group_seed + 31,
+        "surface_seed": group_seed + 41,
+        "label_seed": group_seed + 51,
     }
 
 
@@ -457,9 +402,7 @@ def build_realx_schedule(
     ...,
 ]:
     if protocol is None:
-        protocol = (
-            RealXProtocol()
-        )
+        protocol = RealXProtocol()
 
     rows = []
 
@@ -471,27 +414,18 @@ def build_realx_schedule(
     ):
         for realization in range(
             1,
-            protocol.n_realizations
-            + 1,
+            protocol.n_realizations + 1,
         ):
             seeds = _seed_family(
                 protocol=protocol,
-                dataset_index=(
-                    dataset_index
-                ),
-                realization=(
-                    realization
-                ),
+                dataset_index=dataset_index,
+                realization=realization,
             )
 
-            for strength in (
-                LOCKED_REALX_STRENGTHS
-            ):
+            for strength in LOCKED_REALX_STRENGTHS:
                 active_count = (
-                    protocol
-                    .n_true_interactions
-                    if strength
-                    .active_ground_truth
+                    protocol.n_true_interactions
+                    if strength.active_ground_truth
                     else 0
                 )
 
@@ -504,63 +438,25 @@ def build_realx_schedule(
 
                 rows.append(
                     RealXRunSpec(
-                        run_id=(
-                            run_id
-                        ),
-                        dataset_index=(
-                            dataset_index
-                        ),
-                        task_id=(
-                            dataset.task_id
-                        ),
-                        dataset_name=(
-                            dataset.dataset_name
-                        ),
-                        feature_type=(
-                            dataset.feature_type
-                        ),
-                        realization=(
-                            realization
-                        ),
-                        strength_name=(
-                            strength.name
-                        ),
+                        run_id=run_id,
+                        dataset_index=dataset_index,
+                        task_id=dataset.task_id,
+                        dataset_name=dataset.dataset_name,
+                        feature_type=dataset.feature_type,
+                        realization=realization,
+                        strength_name=strength.name,
                         interaction_coefficient=(
-                            strength
-                            .interaction_coefficient
+                            strength.interaction_coefficient
                         ),
                         active_ground_truth=(
-                            strength
-                            .active_ground_truth
+                            strength.active_ground_truth
                         ),
-                        active_true_interaction_count=(
-                            active_count
-                        ),
-                        row_sample_seed=(
-                            seeds[
-                                "row_sample_seed"
-                            ]
-                        ),
-                        split_seed=(
-                            seeds[
-                                "split_seed"
-                            ]
-                        ),
-                        feature_seed=(
-                            seeds[
-                                "feature_seed"
-                            ]
-                        ),
-                        surface_seed=(
-                            seeds[
-                                "surface_seed"
-                            ]
-                        ),
-                        label_seed=(
-                            seeds[
-                                "label_seed"
-                            ]
-                        ),
+                        active_true_interaction_count=active_count,
+                        row_sample_seed=seeds["row_sample_seed"],
+                        split_seed=seeds["split_seed"],
+                        feature_seed=seeds["feature_seed"],
+                        surface_seed=seeds["surface_seed"],
+                        label_seed=seeds["label_seed"],
                     )
                 )
 
@@ -573,9 +469,7 @@ def expected_realx_run_count(
     protocol: RealXProtocol | None = None,
 ) -> int:
     if protocol is None:
-        protocol = (
-            RealXProtocol()
-        )
+        protocol = RealXProtocol()
 
     return (
         len(
@@ -594,14 +488,11 @@ def expected_realx_run_count(
 
 
 def canonical_realx_config_dict() -> dict[str, Any]:
-    protocol = (
-        RealXProtocol()
-    )
+    protocol = RealXProtocol()
 
     return {
-        "benchmark_id": (
-            protocol.benchmark_id
-        ),
+        "benchmark_id": protocol.benchmark_id,
+
         "selection_rule": {
             "rule": (
                 "first_lower_median_last_"
@@ -612,20 +503,14 @@ def canonical_realx_config_dict() -> dict[str, Any]:
                 "locked_28_task_openml_registry"
             ),
         },
+
         "datasets": [
             {
-                "task_id": (
-                    dataset.task_id
-                ),
-                "dataset_name": (
-                    dataset.dataset_name
-                ),
-                "feature_type": (
-                    dataset.feature_type
-                ),
+                "task_id": dataset.task_id,
+                "dataset_name": dataset.dataset_name,
+                "feature_type": dataset.feature_type,
                 "overall_registry_position": (
-                    dataset
-                    .overall_registry_position
+                    dataset.overall_registry_position
                 ),
                 "feature_type_rank": (
                     dataset.feature_type_rank
@@ -637,88 +522,111 @@ def canonical_realx_config_dict() -> dict[str, Any]:
                     dataset.selection_anchor
                 ),
             }
-            for dataset in (
-                LOCKED_REALX_DATASETS
-            )
+            for dataset in LOCKED_REALX_DATASETS
         ],
+
         "strengths": [
             {
-                "name": (
-                    strength.name
-                ),
+                "name": strength.name,
                 "interaction_coefficient": (
-                    strength
-                    .interaction_coefficient
+                    strength.interaction_coefficient
                 ),
                 "active_ground_truth": (
-                    strength
-                    .active_ground_truth
+                    strength.active_ground_truth
                 ),
             }
-            for strength in (
-                LOCKED_REALX_STRENGTHS
-            )
+            for strength in LOCKED_REALX_STRENGTHS
         ],
+
         "protocol": {
             "n_realizations": 5,
             "max_rows": 5000,
+
             "train_fraction": 0.60,
             "validation_fraction": 0.20,
             "test_fraction": 0.20,
+
             "n_true_interactions": 3,
             "n_main_effects": 3,
             "min_eligible_features": 9,
+
             "max_states_per_feature": 8,
+
             "main_effect_coefficient": 1.0,
             "target_expected_prevalence": 0.50,
             "link": "logistic",
+
             "discovery_runs": 5,
             "residual_crossfit_folds": 5,
             "selection_threshold": 0.60,
             "isr_threshold": 0.60,
+
             "candidate_k_rule": (
                 "min_p_minus_1_20"
             ),
+
             "base_seed": 26_090_800,
         },
+
         "generator": {
             "original_labels_used": False,
             "preserve_real_X": True,
+
             "missing_values": (
                 "explicit_missing_state"
             ),
+
             "numeric_state_encoding": (
                 "empirical_quantile_states"
             ),
+
             "categorical_state_encoding": (
                 "top_levels_plus_other"
             ),
+
             "main_effect_surface": (
                 "centered_random_state_effect"
             ),
+
             "interaction_surface": (
                 "gaussian_cell_surface"
             ),
+
             "interaction_purification": (
                 "empirical_weighted_two_way_"
                 "functional_anova"
             ),
+
+            "interaction_purification_solver": (
+                "direct_weighted_least_squares_projection"
+            ),
+
+            "interaction_pair_eligibility": (
+                "positive_empirical_interaction_df"
+            ),
+
+            "minimum_interaction_df": 1,
+
+            "interaction_pair_matching": (
+                "seeded_disjoint_backtracking"
+            ),
+
+            "surface_max_attempts": 32,
+
             "component_standardization": (
                 "unit_standard_deviation"
             ),
-            "common_random_numbers_across_strengths": (
-                True
-            ),
+
+            "common_random_numbers_across_strengths": True,
+
             "intercept_calibration": (
                 "target_expected_prevalence"
             ),
-            "purification_tolerance": (
-                1e-10
-            ),
-            "purification_max_iterations": (
-                1000
-            ),
+
+            "purification_tolerance": 1e-10,
+            "purification_max_iterations": 1000,
         },
+
         "comparators": [
             "Main NAM",
             "Full AG-NAM",
@@ -727,33 +635,34 @@ def canonical_realx_config_dict() -> dict[str, Any]:
             "No-ISR AG-NAM",
             "Single-Run AG-NAM",
         ],
+
         "statistics": {
-            "experimental_unit": (
-                "dataset"
-            ),
+            "experimental_unit": "dataset",
+
             "realization_aggregation": (
                 "mean_over_5_realizations"
             ),
-            "primary_condition": (
-                "moderate"
-            ),
+
+            "primary_condition": "moderate",
+
             "primary_metric": (
                 "interaction_auprc_minus_"
                 "random_prevalence"
             ),
+
             "primary_test": (
                 "one_sided_wilcoxon_greater"
             ),
+
             "alpha": 0.05,
+
             "multiplicity_adjustment": (
                 "none_single_primary"
             ),
-            "bootstrap_resamples": (
-                10_000
-            ),
-            "bootstrap_seed": (
-                26_090_806
-            ),
+
+            "bootstrap_resamples": 10_000,
+            "bootstrap_seed": 26_090_806,
+
             "secondary_inference": (
                 "descriptive_only"
             ),
@@ -772,8 +681,7 @@ def load_realx_config(
 
     if not path.exists():
         raise FileNotFoundError(
-            f"Real-X protocol config "
-            f"not found: {path}"
+            f"Real-X protocol config not found: {path}"
         )
 
     with path.open(
@@ -789,8 +697,7 @@ def load_realx_config(
         dict,
     ):
         raise ValueError(
-            "Real-X config must contain "
-            "a YAML mapping."
+            "Real-X config must contain a YAML mapping."
         )
 
     return loaded

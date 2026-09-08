@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import combinations
 from typing import Any
 
 import numpy as np
@@ -28,14 +29,6 @@ class RealXStateEncoding:
 
 @dataclass
 class RealXBlueprint:
-    """
-    Strength-independent latent Real-X construction.
-
-    All four interaction-strength conditions within one
-    dataset/realization recreate this blueprint exactly because
-    their seed family is shared.
-    """
-
     sampled_X: pd.DataFrame
     source_row_positions: np.ndarray
 
@@ -47,9 +40,15 @@ class RealXBlueprint:
     eligible_features: tuple[str, ...]
 
     main_features: tuple[str, ...]
+
     true_pairs: tuple[
         tuple[str, str],
         ...,
+    ]
+
+    true_pair_interaction_dfs: dict[
+        tuple[str, str],
+        int,
     ]
 
     main_effect_tables: dict[
@@ -107,6 +106,11 @@ class RealXGeneratedRun:
         ...,
     ]
 
+    true_pair_interaction_dfs: dict[
+        tuple[str, str],
+        int,
+    ]
+
     state_codes: pd.DataFrame
     state_labels: dict[str, tuple[str, ...]]
 
@@ -143,8 +147,7 @@ def _sigmoid(
     )
 
     positive = (
-        values
-        >= 0.0
+        values >= 0.0
     )
 
     output[
@@ -217,12 +220,10 @@ def _standardize_vector(
         not np.isfinite(
             standard_deviation
         )
-        or standard_deviation
-        <= tolerance
+        or standard_deviation <= tolerance
     ):
         raise RuntimeError(
-            f"{name} has degenerate "
-            "observed variance."
+            f"{name} has degenerate observed variance."
         )
 
     return (
@@ -245,13 +246,6 @@ def sample_realx_rows(
     pd.DataFrame,
     np.ndarray,
 ]:
-    """
-    Deterministically retain all rows when n <= max_rows.
-
-    Otherwise select max_rows real observations without replacement.
-    Selected source positions are sorted so original row ordering is
-    preserved within the sampled dataset.
-    """
     if not isinstance(
         X,
         pd.DataFrame,
@@ -275,10 +269,7 @@ def sample_realx_rows(
             "X must have unique column names."
         )
 
-    if (
-        max_rows
-        < 1
-    ):
+    if max_rows < 1:
         raise ValueError(
             "max_rows must be positive."
         )
@@ -287,10 +278,7 @@ def sample_realx_rows(
         X
     )
 
-    if (
-        n_rows
-        <= max_rows
-    ):
+    if n_rows <= max_rows:
         positions = np.arange(
             n_rows,
             dtype=np.int64,
@@ -354,6 +342,23 @@ def _encode_numeric_feature(
         ~numeric.isna()
     ]
 
+    if len(
+        nonmissing
+    ) == 0:
+        output = np.zeros(
+            len(
+                series
+            ),
+            dtype=np.int64,
+        )
+
+        return (
+            output,
+            (
+                "MISSING",
+            ),
+        )
+
     if (
         nonmissing.nunique(
             dropna=True
@@ -381,14 +386,10 @@ def _encode_numeric_feature(
             - missing_state_cost
         )
 
-        if (
-            available_states
-            < 2
-        ):
+        if available_states < 2:
             raise ValueError(
                 "max_states is too small "
-                "for numeric encoding with "
-                "missing values."
+                "for numeric encoding with missing values."
             )
 
         q = min(
@@ -412,9 +413,7 @@ def _encode_numeric_feature(
                 quantile_codes,
                 errors="raise",
             )
-            .astype(
-                int
-            )
+            .astype(int)
             .to_numpy()
         )
 
@@ -436,9 +435,7 @@ def _encode_numeric_feature(
 
     output[
         ~missing_mask
-    ] = (
-        nonmissing_codes
-    )
+    ] = nonmissing_codes
 
     labels = [
         f"Q{index + 1}"
@@ -454,9 +451,7 @@ def _encode_numeric_feature(
 
         output[
             missing_mask
-        ] = (
-            missing_code
-        )
+        ] = missing_code
 
         labels.append(
             "MISSING"
@@ -490,6 +485,21 @@ def _encode_categorical_feature(
         .astype(str)
     )
 
+    if len(
+        nonmissing
+    ) == 0:
+        return (
+            np.zeros(
+                len(
+                    series
+                ),
+                dtype=np.int64,
+            ),
+            (
+                "MISSING",
+            ),
+        )
+
     unique_values = sorted(
         nonmissing.unique()
         .tolist()
@@ -506,10 +516,7 @@ def _encode_categorical_feature(
         - missing_state_cost
     )
 
-    if (
-        available_states
-        < 1
-    ):
+    if available_states < 1:
         raise ValueError(
             "max_states is too small "
             "for categorical encoding."
@@ -523,10 +530,7 @@ def _encode_categorical_feature(
     )
 
     if use_other:
-        if (
-            available_states
-            < 2
-        ):
+        if available_states < 2:
             raise ValueError(
                 "At least two non-missing "
                 "state slots are required "
@@ -637,34 +641,23 @@ def _encode_categorical_feature(
             ]
         )
 
-        if (
-            value
-            in mapping
-        ):
+        if value in mapping:
             output[
                 index
-            ] = (
-                mapping[
-                    value
-                ]
-            )
+            ] = mapping[
+                value
+            ]
 
         else:
-            if (
-                other_code
-                is None
-            ):
+            if other_code is None:
                 raise RuntimeError(
-                    "Categorical value was "
-                    "not encoded and OTHER "
-                    "state is unavailable."
+                    "Categorical value was not encoded "
+                    "and OTHER is unavailable."
                 )
 
             output[
                 index
-            ] = (
-                other_code
-            )
+            ] = other_code
 
     if missing_mask.any():
         missing_code = len(
@@ -673,9 +666,7 @@ def _encode_categorical_feature(
 
         output[
             missing_mask
-        ] = (
-            missing_code
-        )
+        ] = missing_code
 
         labels.append(
             "MISSING"
@@ -694,26 +685,9 @@ def encode_realx_states(
     *,
     max_states_per_feature: int,
 ) -> RealXStateEncoding:
-    """
-    Construct generation-only finite state representations.
-
-    Numeric:
-        empirical quantile states
-
-    Categorical:
-        observed levels with deterministic top-frequency retention
-        and optional OTHER state
-
-    Missing:
-        explicit MISSING state
-    """
-    if (
-        max_states_per_feature
-        < 2
-    ):
+    if max_states_per_feature < 2:
         raise ValueError(
-            "max_states_per_feature must "
-            "be at least 2."
+            "max_states_per_feature must be at least 2."
         )
 
     columns: dict[
@@ -736,9 +710,7 @@ def encode_realx_states(
         str,
     ] = {}
 
-    for column in (
-        X.columns
-    ):
+    for column in X.columns:
         feature_name = str(
             column
         )
@@ -769,9 +741,7 @@ def encode_realx_states(
                 ),
             )
 
-            feature_kind = (
-                "numeric"
-            )
+            feature_kind = "numeric"
 
         else:
             (
@@ -784,21 +754,15 @@ def encode_realx_states(
                 ),
             )
 
-            feature_kind = (
-                "categorical"
-            )
+            feature_kind = "categorical"
 
         columns[
             feature_name
-        ] = (
-            codes
-        )
+        ] = codes
 
         state_labels[
             feature_name
-        ] = (
-            labels
-        )
+        ] = labels
 
         state_counts[
             feature_name
@@ -808,9 +772,7 @@ def encode_realx_states(
 
         feature_kinds[
             feature_name
-        ] = (
-            feature_kind
-        )
+        ] = feature_kind
 
     state_codes = pd.DataFrame(
         columns,
@@ -822,17 +784,275 @@ def encode_realx_states(
     )
 
     return RealXStateEncoding(
-        state_codes=(
-            state_codes
+        state_codes=state_codes,
+        state_labels=state_labels,
+        state_counts=state_counts,
+        feature_kinds=feature_kinds,
+    )
+
+
+# =============================================================================
+# EMPIRICAL INTERACTION SUPPORT
+# =============================================================================
+
+
+def _joint_count_matrix(
+    codes_a: np.ndarray,
+    codes_b: np.ndarray,
+    *,
+    n_states_a: int,
+    n_states_b: int,
+) -> np.ndarray:
+    counts = np.zeros(
+        (
+            n_states_a,
+            n_states_b,
         ),
-        state_labels=(
-            state_labels
+        dtype=np.float64,
+    )
+
+    np.add.at(
+        counts,
+        (
+            codes_a,
+            codes_b,
         ),
-        state_counts=(
-            state_counts
+        1.0,
+    )
+
+    return counts
+
+
+def interaction_support_degrees_of_freedom(
+    codes_a: np.ndarray,
+    codes_b: np.ndarray,
+    *,
+    n_states_a: int,
+    n_states_b: int,
+) -> int:
+    """
+    Dimension of the estimable pure two-way interaction space on the
+    observed empirical support.
+
+    The observed cells form a bipartite support graph:
+
+        interaction_df = E - V + C
+
+    E:
+        observed cells / graph edges
+
+    V:
+        active row states + active column states
+
+    C:
+        connected components of the bipartite support graph
+    """
+    counts = _joint_count_matrix(
+        codes_a,
+        codes_b,
+        n_states_a=n_states_a,
+        n_states_b=n_states_b,
+    )
+
+    support = (
+        counts > 0.0
+    )
+
+    active_rows = np.flatnonzero(
+        support.any(
+            axis=1
+        )
+    )
+
+    active_columns = np.flatnonzero(
+        support.any(
+            axis=0
+        )
+    )
+
+    edge_count = int(
+        np.sum(
+            support
+        )
+    )
+
+    if (
+        edge_count == 0
+        or len(
+            active_rows
+        ) == 0
+        or len(
+            active_columns
+        ) == 0
+    ):
+        return 0
+
+    row_neighbors = {
+        int(
+            row
+        ): set(
+            int(
+                column
+            )
+            for column in np.flatnonzero(
+                support[
+                    row,
+                    :
+                ]
+            )
+        )
+        for row in active_rows
+    }
+
+    column_neighbors = {
+        int(
+            column
+        ): set(
+            int(
+                row
+            )
+            for row in np.flatnonzero(
+                support[
+                    :,
+                    column
+                ]
+            )
+        )
+        for column in active_columns
+    }
+
+    visited_rows = set()
+    visited_columns = set()
+
+    component_count = 0
+
+    for initial_row in active_rows:
+        initial_row = int(
+            initial_row
+        )
+
+        if initial_row in visited_rows:
+            continue
+
+        component_count += 1
+
+        stack = [
+            (
+                "row",
+                initial_row,
+            )
+        ]
+
+        while stack:
+            (
+                kind,
+                index,
+            ) = stack.pop()
+
+            if kind == "row":
+                if index in visited_rows:
+                    continue
+
+                visited_rows.add(
+                    index
+                )
+
+                for column in row_neighbors[
+                    index
+                ]:
+                    if (
+                        column
+                        not in visited_columns
+                    ):
+                        stack.append(
+                            (
+                                "column",
+                                column,
+                            )
+                        )
+
+            else:
+                if index in visited_columns:
+                    continue
+
+                visited_columns.add(
+                    index
+                )
+
+                for row in column_neighbors[
+                    index
+                ]:
+                    if (
+                        row
+                        not in visited_rows
+                    ):
+                        stack.append(
+                            (
+                                "row",
+                                row,
+                            )
+                        )
+
+    vertex_count = (
+        len(
+            active_rows
+        )
+        + len(
+            active_columns
+        )
+    )
+
+    degrees_of_freedom = (
+        edge_count
+        - vertex_count
+        + component_count
+    )
+
+    return max(
+        int(
+            degrees_of_freedom
         ),
-        feature_kinds=(
-            feature_kinds
+        0,
+    )
+
+
+def interaction_pair_degrees_of_freedom(
+    encoding: RealXStateEncoding,
+    feature_a: str,
+    feature_b: str,
+) -> int:
+    codes_a = (
+        encoding
+        .state_codes[
+            feature_a
+        ]
+        .to_numpy(
+            dtype=np.int64
+        )
+    )
+
+    codes_b = (
+        encoding
+        .state_codes[
+            feature_b
+        ]
+        .to_numpy(
+            dtype=np.int64
+        )
+    )
+
+    return interaction_support_degrees_of_freedom(
+        codes_a,
+        codes_b,
+        n_states_a=(
+            encoding.state_counts[
+                feature_a
+            ]
+        ),
+        n_states_b=(
+            encoding.state_counts[
+                feature_b
+            ]
         ),
     )
 
@@ -842,6 +1062,128 @@ def encode_realx_states(
 # =============================================================================
 
 
+def _find_seeded_disjoint_pair_matching(
+    candidate_pairs: list[
+        tuple[
+            str,
+            str,
+            int,
+        ]
+    ],
+    *,
+    n_pairs: int,
+    rng: np.random.Generator,
+) -> tuple[
+    tuple[
+        str,
+        str,
+    ],
+    ...,
+] | None:
+    if n_pairs < 1:
+        return tuple()
+
+    if len(
+        candidate_pairs
+    ) < n_pairs:
+        return None
+
+    order = rng.permutation(
+        len(
+            candidate_pairs
+        )
+    )
+
+    ordered = [
+        candidate_pairs[
+            int(
+                index
+            )
+        ]
+        for index in order
+    ]
+
+    def search(
+        start: int,
+        chosen: list[
+            tuple[
+                str,
+                str,
+            ]
+        ],
+        used: set[str],
+    ):
+        if len(
+            chosen
+        ) == n_pairs:
+            return tuple(
+                chosen
+            )
+
+        needed = (
+            n_pairs
+            - len(
+                chosen
+            )
+        )
+
+        if (
+            len(
+                ordered
+            )
+            - start
+            < needed
+        ):
+            return None
+
+        for candidate_index in range(
+            start,
+            len(
+                ordered
+            ),
+        ):
+            (
+                feature_a,
+                feature_b,
+                _,
+            ) = ordered[
+                candidate_index
+            ]
+
+            if (
+                feature_a in used
+                or feature_b in used
+            ):
+                continue
+
+            result = search(
+                candidate_index + 1,
+                chosen
+                + [
+                    (
+                        feature_a,
+                        feature_b,
+                    )
+                ],
+                used
+                | {
+                    feature_a,
+                    feature_b,
+                },
+            )
+
+            if result is not None:
+                return result
+
+        return None
+
+    return search(
+        0,
+        [],
+        set(),
+    )
+
+
 def choose_realx_truth_structure(
     encoding: RealXStateEncoding,
     *,
@@ -849,6 +1191,7 @@ def choose_realx_truth_structure(
     n_main_effects: int,
     n_true_interactions: int,
     min_eligible_features: int,
+    minimum_interaction_df: int = 1,
 ) -> tuple[
     tuple[str, ...],
     tuple[
@@ -866,15 +1209,14 @@ def choose_realx_truth_structure(
             .tolist()
         )
         if (
-            encoding
-            .state_counts[
+            encoding.state_counts[
                 feature
             ]
             >= 2
         )
     )
 
-    required = (
+    required_feature_count = (
         n_main_effects
         + 2
         * n_true_interactions
@@ -888,63 +1230,108 @@ def choose_realx_truth_structure(
         or len(
             eligible
         )
-        < required
+        < required_feature_count
     ):
         raise RuntimeError(
-            "Insufficient eligible Real-X "
-            "features. "
-            f"Found {len(eligible)}, "
-            f"required at least "
-            f"{max(min_eligible_features, required)}."
+            "Insufficient eligible Real-X features. "
+            f"Found {len(eligible)}, required at least "
+            f"{max(min_eligible_features, required_feature_count)}."
+        )
+
+    candidate_pairs = []
+
+    for (
+        feature_a,
+        feature_b,
+    ) in combinations(
+        eligible,
+        2,
+    ):
+        interaction_df = (
+            interaction_pair_degrees_of_freedom(
+                encoding,
+                feature_a,
+                feature_b,
+            )
+        )
+
+        if (
+            interaction_df
+            >= minimum_interaction_df
+        ):
+            candidate_pairs.append(
+                (
+                    feature_a,
+                    feature_b,
+                    interaction_df,
+                )
+            )
+
+    if len(
+        candidate_pairs
+    ) < n_true_interactions:
+        raise RuntimeError(
+            "Insufficient empirically estimable "
+            "interaction pairs on the observed Real-X support. "
+            f"Found {len(candidate_pairs)} candidate pairs."
         )
 
     rng = np.random.default_rng(
         feature_seed
     )
 
-    chosen = rng.choice(
-        np.asarray(
-            eligible,
-            dtype=object,
-        ),
-        size=required,
-        replace=False,
-    ).tolist()
-
-    main_features = tuple(
-        str(
-            value
-        )
-        for value in (
-            chosen[
-                :n_main_effects
-            ]
+    true_pairs = (
+        _find_seeded_disjoint_pair_matching(
+            candidate_pairs,
+            n_pairs=n_true_interactions,
+            rng=rng,
         )
     )
 
-    pair_features = [
-        str(
-            value
+    if true_pairs is None:
+        raise RuntimeError(
+            "No disjoint matching of "
+            f"{n_true_interactions} estimable "
+            "interaction pairs exists on this Real-X support."
         )
-        for value in (
-            chosen[
-                n_main_effects:
-            ]
-        )
+
+    paired_features = {
+        feature
+        for pair in true_pairs
+        for feature in pair
+    }
+
+    remaining_features = [
+        feature
+        for feature in eligible
+        if feature not in paired_features
     ]
 
-    true_pairs = tuple(
-        (
-            pair_features[
-                2 * index
-            ],
-            pair_features[
-                2 * index
-                + 1
-            ],
+    if len(
+        remaining_features
+    ) < n_main_effects:
+        raise RuntimeError(
+            "Insufficient remaining features "
+            "for disjoint main effects after "
+            "interaction-pair matching."
         )
-        for index in range(
-            n_true_interactions
+
+    main_order = rng.permutation(
+        len(
+            remaining_features
+        )
+    )
+
+    main_features = tuple(
+        remaining_features[
+            int(
+                index
+            )
+        ]
+        for index in (
+            main_order[
+                :n_main_effects
+            ]
         )
     )
 
@@ -1016,12 +1403,10 @@ def _build_main_effect_table(
         not np.isfinite(
             observed_std
         )
-        or observed_std
-        <= 1e-12
+        or observed_std <= 1e-12
     ):
         raise RuntimeError(
-            "Generated main-effect "
-            "surface is degenerate."
+            "Generated main-effect surface is degenerate."
         )
 
     table = (
@@ -1029,46 +1414,17 @@ def _build_main_effect_table(
         / observed_std
     )
 
-    observed = table[
-        codes
-    ]
-
     return (
         table,
-        observed,
+        table[
+            codes
+        ],
     )
 
 
 # =============================================================================
 # FUNCTIONAL-ANOVA INTERACTION PURIFICATION
 # =============================================================================
-
-
-def _joint_count_matrix(
-    codes_a: np.ndarray,
-    codes_b: np.ndarray,
-    *,
-    n_states_a: int,
-    n_states_b: int,
-) -> np.ndarray:
-    counts = np.zeros(
-        (
-            n_states_a,
-            n_states_b,
-        ),
-        dtype=np.float64,
-    )
-
-    np.add.at(
-        counts,
-        (
-            codes_a,
-            codes_b,
-        ),
-        1.0,
-    )
-
-    return counts
 
 
 def interaction_marginal_error(
@@ -1088,6 +1444,14 @@ def interaction_marginal_error(
         dtype=np.float64,
     )
 
+    if (
+        surface.shape
+        != weights.shape
+    ):
+        raise ValueError(
+            "Surface and joint-weight shapes must match."
+        )
+
     row_mass = np.sum(
         weights,
         axis=1,
@@ -1102,13 +1466,11 @@ def interaction_marginal_error(
     column_error = 0.0
 
     valid_rows = (
-        row_mass
-        > 0.0
+        row_mass > 0.0
     )
 
     valid_columns = (
-        column_mass
-        > 0.0
+        column_mass > 0.0
     )
 
     if valid_rows.any():
@@ -1161,6 +1523,268 @@ def interaction_marginal_error(
     )
 
 
+def _direct_weighted_additive_residual(
+    raw_surface: np.ndarray,
+    joint_weights: np.ndarray,
+) -> np.ndarray:
+    """
+    Project an observed cell surface directly onto the orthogonal
+    complement of the empirical weighted additive subspace.
+
+    The additive design contains:
+
+        intercept + row-state effects + column-state effects
+
+    Weighted least squares is solved only on observed joint cells.
+
+    Rank deficiency is allowed and handled by numpy.linalg.lstsq.
+    This is important for disconnected or structurally sparse
+    empirical supports.
+
+    The returned residual is the pure two-way component on the
+    observed support.
+    """
+    raw = np.asarray(
+        raw_surface,
+        dtype=np.float64,
+    )
+
+    weights = np.asarray(
+        joint_weights,
+        dtype=np.float64,
+    )
+
+    if raw.shape != weights.shape:
+        raise ValueError(
+            "Surface and joint-weight shapes must match."
+        )
+
+    if not np.all(
+        np.isfinite(
+            raw
+        )
+    ):
+        raise ValueError(
+            "Raw interaction surface contains non-finite values."
+        )
+
+    if not np.all(
+        np.isfinite(
+            weights
+        )
+    ):
+        raise ValueError(
+            "Joint weights contain non-finite values."
+        )
+
+    if np.any(
+        weights < 0.0
+    ):
+        raise ValueError(
+            "Joint weights must be non-negative."
+        )
+
+    support = (
+        weights > 0.0
+    )
+
+    observed_cells = np.argwhere(
+        support
+    )
+
+    if len(
+        observed_cells
+    ) == 0:
+        raise ValueError(
+            "Joint support contains no observed cells."
+        )
+
+    active_rows = np.flatnonzero(
+        support.any(
+            axis=1
+        )
+    )
+
+    active_columns = np.flatnonzero(
+        support.any(
+            axis=0
+        )
+    )
+
+    row_lookup = {
+        int(
+            row
+        ): index
+        for (
+            index,
+            row,
+        ) in enumerate(
+            active_rows
+        )
+    }
+
+    column_lookup = {
+        int(
+            column
+        ): index
+        for (
+            index,
+            column,
+        ) in enumerate(
+            active_columns
+        )
+    }
+
+    n_observed = len(
+        observed_cells
+    )
+
+    n_rows = len(
+        active_rows
+    )
+
+    n_columns = len(
+        active_columns
+    )
+
+    design = np.zeros(
+        (
+            n_observed,
+            1
+            + n_rows
+            + n_columns,
+        ),
+        dtype=np.float64,
+    )
+
+    target = np.empty(
+        n_observed,
+        dtype=np.float64,
+    )
+
+    observed_weights = np.empty(
+        n_observed,
+        dtype=np.float64,
+    )
+
+    for (
+        observed_index,
+        cell,
+    ) in enumerate(
+        observed_cells
+    ):
+        row = int(
+            cell[
+                0
+            ]
+        )
+
+        column = int(
+            cell[
+                1
+            ]
+        )
+
+        design[
+            observed_index,
+            0,
+        ] = 1.0
+
+        design[
+            observed_index,
+            1
+            + row_lookup[
+                row
+            ],
+        ] = 1.0
+
+        design[
+            observed_index,
+            1
+            + n_rows
+            + column_lookup[
+                column
+            ],
+        ] = 1.0
+
+        target[
+            observed_index
+        ] = raw[
+            row,
+            column,
+        ]
+
+        observed_weights[
+            observed_index
+        ] = weights[
+            row,
+            column,
+        ]
+
+    sqrt_weights = np.sqrt(
+        observed_weights
+    )
+
+    weighted_design = (
+        design
+        * sqrt_weights[
+            :,
+            None,
+        ]
+    )
+
+    weighted_target = (
+        target
+        * sqrt_weights
+    )
+
+    coefficients = np.linalg.lstsq(
+        weighted_design,
+        weighted_target,
+        rcond=None,
+    )[
+        0
+    ]
+
+    additive_fit = (
+        design
+        @ coefficients
+    )
+
+    residual = (
+        target
+        - additive_fit
+    )
+
+    purified = np.zeros_like(
+        raw,
+        dtype=np.float64,
+    )
+
+    for (
+        observed_index,
+        cell,
+    ) in enumerate(
+        observed_cells
+    ):
+        purified[
+            int(
+                cell[
+                    0
+                ]
+            ),
+            int(
+                cell[
+                    1
+                ]
+            ),
+        ] = residual[
+            observed_index
+        ]
+
+    return purified
+
+
 def purify_two_way_surface(
     raw_surface: np.ndarray,
     joint_weights: np.ndarray,
@@ -1173,152 +1797,95 @@ def purify_two_way_surface(
     int,
 ]:
     """
-    Alternating empirical weighted row/column projections.
+    Empirical weighted two-way functional-ANOVA purification.
 
-    At convergence, the retained pair surface has approximately zero
-    empirical conditional marginal means along both axes.
+    Numerical solver:
+        direct weighted least-squares projection.
+
+    The mathematical target is unchanged from iterative marginal
+    centering: remove every estimable additive row/column component
+    from the proposed surface.
+
+    The third return value is retained for API compatibility and now
+    denotes the number of direct projection passes rather than
+    alternating-centering iterations.
     """
+    if tolerance <= 0.0:
+        raise ValueError(
+            "Purification tolerance must be positive."
+        )
+
+    if max_iterations < 1:
+        raise ValueError(
+            "max_iterations must be positive."
+        )
+
     surface = np.asarray(
         raw_surface,
         dtype=np.float64,
-    ).copy()
+    )
 
     weights = np.asarray(
         joint_weights,
         dtype=np.float64,
     )
 
-    if (
-        surface.shape
-        != weights.shape
-    ):
+    if surface.shape != weights.shape:
         raise ValueError(
-            "Surface and joint-weight "
-            "shapes must match."
+            "Surface and joint-weight shapes must match."
         )
 
-    if (
-        np.sum(
-            weights
-        )
-        <= 0.0
-    ):
+    if np.sum(
+        weights
+    ) <= 0.0:
         raise ValueError(
-            "Joint weights must contain "
-            "positive total mass."
+            "Joint weights must contain positive total mass."
         )
 
-    row_mass = np.sum(
+    purified = (
+        _direct_weighted_additive_residual(
+            surface,
+            weights,
+        )
+    )
+
+    error = interaction_marginal_error(
+        purified,
         weights,
-        axis=1,
     )
 
-    column_mass = np.sum(
-        weights,
-        axis=0,
-    )
+    projection_passes = 1
 
-    valid_rows = (
-        row_mass
-        > 0.0
-    )
-
-    valid_columns = (
-        column_mass
-        > 0.0
-    )
-
-    for iteration in range(
-        1,
-        max_iterations
-        + 1,
-    ):
-        row_means = np.zeros(
-            surface.shape[
-                0
-            ],
-            dtype=np.float64,
-        )
-
-        row_means[
-            valid_rows
-        ] = (
-            np.sum(
-                weights
-                * surface,
-                axis=1,
-            )[
-                valid_rows
-            ]
-            / row_mass[
-                valid_rows
-            ]
-        )
-
-        surface = (
-            surface
-            - row_means[
-                :,
-                None,
-            ]
-        )
-
-        column_means = np.zeros(
-            surface.shape[
-                1
-            ],
-            dtype=np.float64,
-        )
-
-        column_means[
-            valid_columns
-        ] = (
-            np.sum(
-                weights
-                * surface,
-                axis=0,
-            )[
-                valid_columns
-            ]
-            / column_mass[
-                valid_columns
-            ]
-        )
-
-        surface = (
-            surface
-            - column_means[
-                None,
-                :,
-            ]
-        )
-
-        error = (
-            interaction_marginal_error(
-                surface,
+    # One additional direct projection is permitted solely as a
+    # numerical cleanup if floating-point round-off exceeds the
+    # locked tolerance. No model- or outcome-dependent decision is
+    # involved.
+    if error > tolerance:
+        purified = (
+            _direct_weighted_additive_residual(
+                purified,
                 weights,
             )
         )
 
-        if (
-            error
-            <= tolerance
-        ):
-            return (
-                surface,
-                error,
-                iteration,
-            )
+        projection_passes += 1
 
-    error = interaction_marginal_error(
-        surface,
-        weights,
-    )
+        error = interaction_marginal_error(
+            purified,
+            weights,
+        )
 
-    raise RuntimeError(
-        "Interaction purification did "
-        "not converge. "
-        f"Final marginal error: {error:.3e}"
+    if error > tolerance:
+        raise RuntimeError(
+            "Direct weighted interaction purification "
+            "failed numerical tolerance. "
+            f"Final marginal error: {error:.3e}"
+        )
+
+    return (
+        purified,
+        error,
+        projection_passes,
     )
 
 
@@ -1331,94 +1898,133 @@ def _build_interaction_surface(
     rng: np.random.Generator,
     tolerance: float,
     max_iterations: int,
+    max_surface_attempts: int,
 ) -> tuple[
     np.ndarray,
     np.ndarray,
     float,
 ]:
-    raw = rng.normal(
-        loc=0.0,
-        scale=1.0,
-        size=(
-            n_states_a,
-            n_states_b,
-        ),
-    )
-
-    joint_counts = (
-        _joint_count_matrix(
+    interaction_df = (
+        interaction_support_degrees_of_freedom(
             codes_a,
             codes_b,
-            n_states_a=(
-                n_states_a
-            ),
-            n_states_b=(
-                n_states_b
-            ),
+            n_states_a=n_states_a,
+            n_states_b=n_states_b,
         )
     )
 
-    (
-        purified,
-        marginal_error,
-        _,
-    ) = purify_two_way_surface(
-        raw,
-        joint_counts,
-        tolerance=(
-            tolerance
-        ),
-        max_iterations=(
-            max_iterations
-        ),
-    )
-
-    observed = purified[
-        codes_a,
-        codes_b,
-    ]
-
-    observed_std = float(
-        np.std(
-            observed,
-            ddof=0,
-        )
-    )
-
-    if (
-        not np.isfinite(
-            observed_std
-        )
-        or observed_std
-        <= 1e-12
-    ):
+    if interaction_df < 1:
         raise RuntimeError(
-            "Purified interaction "
-            "surface is degenerate on "
-            "the observed real-X support."
+            "Interaction surface requested for a pair "
+            "with zero empirical pure-interaction "
+            "degrees of freedom."
         )
 
-    purified = (
-        purified
-        / observed_std
-    )
-
-    observed = purified[
+    joint_counts = _joint_count_matrix(
         codes_a,
         codes_b,
-    ]
-
-    scaled_error = (
-        interaction_marginal_error(
-            purified,
-            joint_counts,
-        )
+        n_states_a=n_states_a,
+        n_states_b=n_states_b,
     )
 
-    return (
-        purified,
-        observed,
-        scaled_error,
+    numerical_postscale_tolerance = max(
+        1e-8,
+        tolerance * 100.0,
+    )
+
+    for _ in range(
+        max_surface_attempts
+    ):
+        raw = rng.normal(
+            loc=0.0,
+            scale=1.0,
+            size=(
+                n_states_a,
+                n_states_b,
+            ),
+        )
+
+        (
+            purified,
+            _,
+            _,
+        ) = purify_two_way_surface(
+            raw,
+            joint_counts,
+            tolerance=tolerance,
+            max_iterations=max_iterations,
+        )
+
+        observed = purified[
+            codes_a,
+            codes_b,
+        ]
+
+        observed_std = float(
+            np.std(
+                observed,
+                ddof=0,
+            )
+        )
+
+        if (
+            not np.isfinite(
+                observed_std
+            )
+            or observed_std <= 1e-12
+        ):
+            continue
+
+        standardized_surface = (
+            purified
+            / observed_std
+        )
+
+        standardized_observed = (
+            standardized_surface[
+                codes_a,
+                codes_b,
+            ]
+        )
+
+        scaled_error = (
+            interaction_marginal_error(
+                standardized_surface,
+                joint_counts,
+            )
+        )
+
+        if (
+            scaled_error
+            > numerical_postscale_tolerance
+        ):
+            continue
+
+        standardized_std = float(
+            np.std(
+                standardized_observed,
+                ddof=0,
+            )
+        )
+
+        if not np.isclose(
+            standardized_std,
+            1.0,
+            atol=1e-10,
+            rtol=0.0,
+        ):
+            continue
+
+        return (
+            standardized_surface,
+            standardized_observed,
+            scaled_error,
+        )
+
+    raise RuntimeError(
+        "Unable to draw a numerically valid "
+        "non-degenerate purified interaction surface after "
+        f"{max_surface_attempts} deterministic attempts."
     )
 
 
@@ -1438,13 +2044,9 @@ def build_realx_split_indices(
     np.ndarray,
     np.ndarray,
 ]:
-    if (
-        n_rows
-        < 5
-    ):
+    if n_rows < 5:
         raise ValueError(
-            "At least five rows are "
-            "required."
+            "At least five rows are required."
         )
 
     rng = np.random.default_rng(
@@ -1481,8 +2083,7 @@ def build_realx_split_indices(
         n_test,
     ) < 1:
         raise RuntimeError(
-            "Real-X split produced an "
-            "empty partition."
+            "Real-X split produced an empty partition."
         )
 
     train_indices = np.sort(
@@ -1537,8 +2138,7 @@ def calibrate_logistic_intercept(
         < 1.0
     ):
         raise ValueError(
-            "Target prevalence must lie "
-            "strictly in (0, 1)."
+            "Target prevalence must lie strictly in (0, 1)."
         )
 
     lower = -40.0
@@ -1573,14 +2173,10 @@ def calibrate_logistic_intercept(
             prevalence
             < target_expected_prevalence
         ):
-            lower = (
-                midpoint
-            )
+            lower = midpoint
 
         else:
-            upper = (
-                midpoint
-            )
+            upper = midpoint
 
     return float(
         (
@@ -1603,8 +2199,15 @@ def build_realx_blueprint(
     protocol: RealXProtocol | None = None,
 ) -> RealXBlueprint:
     if protocol is None:
-        protocol = (
-            RealXProtocol()
+        protocol = RealXProtocol()
+
+    if (
+        protocol.interaction_purification_solver
+        != "direct_weighted_least_squares_projection"
+    ):
+        raise RuntimeError(
+            "Unsupported Real-X interaction "
+            "purification solver."
         )
 
     (
@@ -1612,23 +2215,15 @@ def build_realx_blueprint(
         source_positions,
     ) = sample_realx_rows(
         X,
-        max_rows=(
-            protocol.max_rows
-        ),
-        seed=(
-            run_spec
-            .row_sample_seed
-        ),
+        max_rows=protocol.max_rows,
+        seed=run_spec.row_sample_seed,
     )
 
-    encoding = (
-        encode_realx_states(
-            sampled_X,
-            max_states_per_feature=(
-                protocol
-                .max_states_per_feature
-            ),
-        )
+    encoding = encode_realx_states(
+        sampled_X,
+        max_states_per_feature=(
+            protocol.max_states_per_feature
+        ),
     )
 
     (
@@ -1637,21 +2232,43 @@ def build_realx_blueprint(
         eligible_features,
     ) = choose_realx_truth_structure(
         encoding,
-        feature_seed=(
-            run_spec.feature_seed
-        ),
-        n_main_effects=(
-            protocol.n_main_effects
-        ),
-        n_true_interactions=(
-            protocol
-            .n_true_interactions
-        ),
+        feature_seed=run_spec.feature_seed,
+        n_main_effects=protocol.n_main_effects,
+        n_true_interactions=protocol.n_true_interactions,
         min_eligible_features=(
-            protocol
-            .min_eligible_features
+            protocol.min_eligible_features
+        ),
+        minimum_interaction_df=(
+            protocol.minimum_interaction_df
         ),
     )
+
+    true_pair_interaction_dfs = {
+        pair: (
+            interaction_pair_degrees_of_freedom(
+                encoding,
+                pair[
+                    0
+                ],
+                pair[
+                    1
+                ],
+            )
+        )
+        for pair in true_pairs
+    }
+
+    if not all(
+        value
+        >= protocol.minimum_interaction_df
+        for value in (
+            true_pair_interaction_dfs.values()
+        )
+    ):
+        raise RuntimeError(
+            "Locked truth selection produced "
+            "a non-estimable interaction pair."
+        )
 
     surface_rng = np.random.default_rng(
         run_spec.surface_seed
@@ -1661,9 +2278,7 @@ def build_realx_blueprint(
 
     main_contributions = []
 
-    for feature in (
-        main_features
-    ):
+    for feature in main_features:
         codes = (
             encoding
             .state_codes[
@@ -1680,21 +2295,16 @@ def build_realx_blueprint(
         ) = _build_main_effect_table(
             codes,
             n_states=(
-                encoding
-                .state_counts[
+                encoding.state_counts[
                     feature
                 ]
             ),
-            rng=(
-                surface_rng
-            ),
+            rng=surface_rng,
         )
 
         main_effect_tables[
             feature
-        ] = (
-            table
-        )
+        ] = table
 
         main_contributions.append(
             contribution
@@ -1707,13 +2317,9 @@ def build_realx_blueprint(
         axis=0,
     )
 
-    main_composite = (
-        _standardize_vector(
-            raw_main_composite,
-            name=(
-                "main-effect composite"
-            ),
-        )
+    main_composite = _standardize_vector(
+        raw_main_composite,
+        name="main-effect composite",
     )
 
     interaction_surfaces = {}
@@ -1754,27 +2360,24 @@ def build_realx_blueprint(
             codes_a,
             codes_b,
             n_states_a=(
-                encoding
-                .state_counts[
+                encoding.state_counts[
                     feature_a
                 ]
             ),
             n_states_b=(
-                encoding
-                .state_counts[
+                encoding.state_counts[
                     feature_b
                 ]
             ),
-            rng=(
-                surface_rng
-            ),
+            rng=surface_rng,
             tolerance=(
-                protocol
-                .purification_tolerance
+                protocol.purification_tolerance
             ),
             max_iterations=(
-                protocol
-                .purification_max_iterations
+                protocol.purification_max_iterations
+            ),
+            max_surface_attempts=(
+                protocol.surface_max_attempts
             ),
         )
 
@@ -1785,36 +2388,26 @@ def build_realx_blueprint(
 
         interaction_surfaces[
             pair
-        ] = (
-            surface
-        )
+        ] = surface
 
         interaction_marginal_errors[
             pair
-        ] = (
-            marginal_error
-        )
+        ] = marginal_error
 
         pair_contributions.append(
             contribution
         )
 
-    raw_interaction_composite = (
-        np.sum(
-            np.vstack(
-                pair_contributions
-            ),
-            axis=0,
-        )
+    raw_interaction_composite = np.sum(
+        np.vstack(
+            pair_contributions
+        ),
+        axis=0,
     )
 
-    interaction_composite = (
-        _standardize_vector(
-            raw_interaction_composite,
-            name=(
-                "interaction composite"
-            ),
-        )
+    interaction_composite = _standardize_vector(
+        raw_interaction_composite,
+        name="interaction composite",
     )
 
     uniform_rng = np.random.default_rng(
@@ -1835,73 +2428,53 @@ def build_realx_blueprint(
         len(
             sampled_X
         ),
-        split_seed=(
-            run_spec.split_seed
-        ),
-        train_fraction=(
-            protocol.train_fraction
-        ),
+        split_seed=run_spec.split_seed,
+        train_fraction=protocol.train_fraction,
         validation_fraction=(
-            protocol
-            .validation_fraction
+            protocol.validation_fraction
         ),
     )
 
     return RealXBlueprint(
-        sampled_X=(
-            sampled_X
+        sampled_X=sampled_X,
+        source_row_positions=source_positions,
+
+        state_codes=encoding.state_codes,
+        state_labels=encoding.state_labels,
+        state_counts=encoding.state_counts,
+        feature_kinds=encoding.feature_kinds,
+
+        eligible_features=eligible_features,
+
+        main_features=main_features,
+        true_pairs=true_pairs,
+
+        true_pair_interaction_dfs=(
+            true_pair_interaction_dfs
         ),
-        source_row_positions=(
-            source_positions
-        ),
-        state_codes=(
-            encoding.state_codes
-        ),
-        state_labels=(
-            encoding.state_labels
-        ),
-        state_counts=(
-            encoding.state_counts
-        ),
-        feature_kinds=(
-            encoding.feature_kinds
-        ),
-        eligible_features=(
-            eligible_features
-        ),
-        main_features=(
-            main_features
-        ),
-        true_pairs=(
-            true_pairs
-        ),
+
         main_effect_tables=(
             main_effect_tables
         ),
+
         interaction_surfaces=(
             interaction_surfaces
         ),
+
         interaction_marginal_errors=(
             interaction_marginal_errors
         ),
-        main_composite=(
-            main_composite
-        ),
+
+        main_composite=main_composite,
         interaction_composite=(
             interaction_composite
         ),
-        uniform_draws=(
-            uniform_draws
-        ),
-        train_indices=(
-            train_indices
-        ),
-        validation_indices=(
-            validation_indices
-        ),
-        test_indices=(
-            test_indices
-        ),
+
+        uniform_draws=uniform_draws,
+
+        train_indices=train_indices,
+        validation_indices=validation_indices,
+        test_indices=test_indices,
     )
 
 
@@ -1915,9 +2488,7 @@ def _locked_strength_lookup() -> dict[
     Any,
 ]:
     return {
-        strength.name: (
-            strength
-        )
+        strength.name: strength
         for strength in (
             LOCKED_REALX_STRENGTHS
         )
@@ -1981,51 +2552,38 @@ def generate_realx_run(
     Original outcome labels are neither accepted nor used.
     """
     if protocol is None:
-        protocol = (
-            RealXProtocol()
-        )
+        protocol = RealXProtocol()
 
     validate_realx_run_strength(
         run_spec
     )
 
-    blueprint = (
-        build_realx_blueprint(
-            X,
-            run_spec,
-            protocol=(
-                protocol
-            ),
-        )
+    blueprint = build_realx_blueprint(
+        X,
+        run_spec,
+        protocol=protocol,
     )
 
     interaction_signal = (
         float(
-            run_spec
-            .interaction_coefficient
+            run_spec.interaction_coefficient
         )
-        * blueprint
-        .interaction_composite
+        * blueprint.interaction_composite
     )
 
     linear_without_intercept = (
         float(
-            protocol
-            .main_effect_coefficient
+            protocol.main_effect_coefficient
         )
-        * blueprint
-        .main_composite
+        * blueprint.main_composite
         + interaction_signal
     )
 
-    intercept = (
-        calibrate_logistic_intercept(
-            linear_without_intercept,
-            target_expected_prevalence=(
-                protocol
-                .target_expected_prevalence
-            ),
-        )
+    intercept = calibrate_logistic_intercept(
+        linear_without_intercept,
+        target_expected_prevalence=(
+            protocol.target_expected_prevalence
+        ),
     )
 
     logits = (
@@ -2033,23 +2591,18 @@ def generate_realx_run(
         + linear_without_intercept
     )
 
-    probabilities = (
-        _sigmoid(
-            logits
-        )
+    probabilities = _sigmoid(
+        logits
     )
 
     labels = (
-        blueprint
-        .uniform_draws
+        blueprint.uniform_draws
         < probabilities
     ).astype(
         np.int64
     )
 
-    if (
-        run_spec.active_ground_truth
-    ):
+    if run_spec.active_ground_truth:
         active_true_pairs = (
             blueprint.true_pairs
         )
@@ -2058,80 +2611,86 @@ def generate_realx_run(
         active_true_pairs = tuple()
 
     return RealXGeneratedRun(
-        run_spec=(
-            run_spec
-        ),
-        X=(
-            blueprint.sampled_X
-        ),
+        run_spec=run_spec,
+
+        X=blueprint.sampled_X,
+
         source_row_positions=(
-            blueprint
-            .source_row_positions
+            blueprint.source_row_positions
         ),
-        y=(
-            labels
-        ),
-        probabilities=(
-            probabilities
-        ),
-        logits=(
-            logits
-        ),
-        intercept=(
-            intercept
-        ),
+
+        y=labels,
+        probabilities=probabilities,
+        logits=logits,
+
+        intercept=intercept,
+
         main_composite=(
             blueprint.main_composite
         ),
+
         interaction_composite=(
-            blueprint
-            .interaction_composite
+            blueprint.interaction_composite
         ),
+
         interaction_signal=(
             interaction_signal
         ),
+
         eligible_features=(
-            blueprint
-            .eligible_features
+            blueprint.eligible_features
         ),
+
         main_features=(
-            blueprint
-            .main_features
+            blueprint.main_features
         ),
+
         template_true_pairs=(
             blueprint.true_pairs
         ),
+
         active_true_pairs=(
             active_true_pairs
         ),
+
+        true_pair_interaction_dfs=(
+            blueprint.true_pair_interaction_dfs
+        ),
+
         state_codes=(
             blueprint.state_codes
         ),
+
         state_labels=(
             blueprint.state_labels
         ),
+
         interaction_marginal_errors=(
-            blueprint
-            .interaction_marginal_errors
+            blueprint.interaction_marginal_errors
         ),
+
         uniform_draws=(
             blueprint.uniform_draws
         ),
+
         train_indices=(
             blueprint.train_indices
         ),
+
         validation_indices=(
-            blueprint
-            .validation_indices
+            blueprint.validation_indices
         ),
+
         test_indices=(
             blueprint.test_indices
         ),
+
         expected_prevalence=float(
             np.mean(
                 probabilities
             )
         ),
+
         realized_prevalence=float(
             np.mean(
                 labels
