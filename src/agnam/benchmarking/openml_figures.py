@@ -16,6 +16,11 @@ import numpy as np
 import pandas as pd
 
 
+# =============================================================================
+# LOCKED CASE STUDIES
+# =============================================================================
+
+
 @dataclass(frozen=True)
 class LockedCaseStudySpec:
     feature_type: str
@@ -29,9 +34,7 @@ LOCKED_CASE_STUDIES = (
         feature_type="numeric",
         registry_position=15,
         task_id=146819,
-        dataset_name=(
-            "climate-model-simulation-crashes"
-        ),
+        dataset_name="climate-model-simulation-crashes",
     ),
     LockedCaseStudySpec(
         feature_type="mixed",
@@ -48,6 +51,11 @@ LOCKED_CASE_STUDIES = (
 )
 
 
+# =============================================================================
+# DATA CONTAINERS
+# =============================================================================
+
+
 @dataclass
 class CaseNetworkData:
     specification: LockedCaseStudySpec
@@ -62,10 +70,7 @@ class OpenMLFigureInputs:
     sparsity_performance: pd.DataFrame
     inference: pd.DataFrame
     case_study_selection: pd.DataFrame
-    case_pair_tables: dict[
-        int,
-        pd.DataFrame,
-    ]
+    case_pair_tables: dict[int, pd.DataFrame]
 
 
 @dataclass(frozen=True)
@@ -82,14 +87,17 @@ class OpenMLFigureExportPaths:
     case_study_edges_csv: Path
 
 
+# =============================================================================
+# FROZEN-EVIDENCE VERIFICATION
+# =============================================================================
+
+
 def _sha256_file(
     path: Path,
 ) -> str:
     digest = sha256()
 
-    with path.open(
-        "rb"
-    ) as handle:
+    with path.open("rb") as handle:
         while True:
             chunk = handle.read(
                 1024 * 1024
@@ -113,10 +121,12 @@ def verify_openml_freeze_manifest(
     repo_root: str | Path = ".",
 ) -> pd.DataFrame:
     """
-    Verify all cryptographically frozen OpenML evidence files before
-    publication figures are generated.
+    Verify every file contained in the frozen OpenML evidence manifest.
 
-    Any modification to a frozen evidence file raises RuntimeError.
+    Verification checks:
+    - file existence
+    - byte size
+    - SHA-256 hash
     """
     manifest_path = Path(
         manifest_path
@@ -139,9 +149,7 @@ def verify_openml_freeze_manifest(
     )
 
     if (
-        manifest.get(
-            "status"
-        )
+        manifest.get("status")
         != "FROZEN"
     ):
         raise RuntimeError(
@@ -160,28 +168,24 @@ def verify_openml_freeze_manifest(
             "contain 28 completed tasks."
         )
 
-    evidence_files = (
-        manifest.get(
-            "evidence_files",
-            []
-        )
+    evidence_files = manifest.get(
+        "evidence_files",
+        [],
     )
 
     if len(
         evidence_files
     ) != 57:
         raise RuntimeError(
-            "Expected 57 frozen evidence "
-            "files."
+            "Expected 57 frozen evidence files, "
+            f"found {len(evidence_files)}."
         )
 
     rows = []
 
     for item in evidence_files:
         source_path = Path(
-            item[
-                "path"
-            ]
+            item["path"]
         )
 
         if not source_path.is_absolute():
@@ -192,19 +196,16 @@ def verify_openml_freeze_manifest(
 
         if not source_path.exists():
             raise FileNotFoundError(
-                f"Frozen evidence file "
-                f"is missing: {source_path}"
+                "Frozen evidence file is missing: "
+                f"{source_path}"
             )
 
         observed_size = int(
-            source_path.stat()
-            .st_size
+            source_path.stat().st_size
         )
 
         expected_size = int(
-            item[
-                "bytes"
-            ]
+            item["bytes"]
         )
 
         if (
@@ -212,8 +213,7 @@ def verify_openml_freeze_manifest(
             != expected_size
         ):
             raise RuntimeError(
-                "Frozen evidence file size "
-                "mismatch: "
+                "Frozen evidence file size mismatch: "
                 f"{source_path}"
             )
 
@@ -224,9 +224,7 @@ def verify_openml_freeze_manifest(
         )
 
         expected_hash = str(
-            item[
-                "sha256"
-            ]
+            item["sha256"]
         )
 
         if (
@@ -234,8 +232,7 @@ def verify_openml_freeze_manifest(
             != expected_hash
         ):
             raise RuntimeError(
-                "Frozen evidence SHA-256 "
-                "mismatch: "
+                "Frozen evidence SHA-256 mismatch: "
                 f"{source_path}"
             )
 
@@ -257,6 +254,11 @@ def verify_openml_freeze_manifest(
     return pd.DataFrame(
         rows
     )
+
+
+# =============================================================================
+# BOOLEAN / INPUT HELPERS
+# =============================================================================
 
 
 def _as_bool_series(
@@ -285,14 +287,12 @@ def _as_bool_series(
         "no": False,
     }
 
-    converted = (
-        normalized.map(
-            mapping
-        )
+    converted = normalized.map(
+        mapping
     )
 
     if converted.isna().any():
-        bad = (
+        bad_values = (
             normalized[
                 converted.isna()
             ]
@@ -301,8 +301,8 @@ def _as_bool_series(
         )
 
         raise ValueError(
-            "Unable to parse boolean "
-            f"values: {bad}"
+            "Unable to parse boolean values: "
+            f"{bad_values}"
         )
 
     return converted.astype(
@@ -314,8 +314,8 @@ def validate_locked_case_study_selection(
     selection: pd.DataFrame,
 ) -> None:
     """
-    Verify that the publication case-study identities exactly match
-    the already locked non-performance-based selection.
+    Confirm that case-study selection exactly matches the locked,
+    non-performance-based rule.
     """
     required = {
         "feature_type",
@@ -336,8 +336,8 @@ def validate_locked_case_study_selection(
 
     if missing:
         raise ValueError(
-            "Case-study selection table "
-            "is missing columns: "
+            "Case-study selection table is "
+            "missing columns: "
             f"{sorted(missing)}"
         )
 
@@ -345,8 +345,8 @@ def validate_locked_case_study_selection(
         selection
     ) != 3:
         raise RuntimeError(
-            "Exactly three locked "
-            "case studies are required."
+            "Exactly three locked case "
+            "studies are required."
         )
 
     performance_used = (
@@ -368,12 +368,9 @@ def validate_locked_case_study_selection(
     ):
         matches = selection[
             pd.to_numeric(
-                selection[
-                    "task_id"
-                ],
+                selection["task_id"],
                 errors="raise",
-            )
-            .astype(int)
+            ).astype(int)
             == specification.task_id
         ]
 
@@ -381,8 +378,8 @@ def validate_locked_case_study_selection(
             matches
         ) != 1:
             raise RuntimeError(
-                "Locked case study missing or "
-                "duplicated for task "
+                "Locked case study missing "
+                "or duplicated for task "
                 f"{specification.task_id}."
             )
 
@@ -392,48 +389,39 @@ def validate_locked_case_study_selection(
 
         if (
             str(
-                row[
-                    "feature_type"
-                ]
+                row["feature_type"]
             )
             != specification.feature_type
         ):
             raise RuntimeError(
-                "Feature-type mismatch for "
-                f"task {specification.task_id}."
+                "Feature-type mismatch "
+                "for task "
+                f"{specification.task_id}."
             )
 
         if int(
-            row[
-                "registry_position"
-            ]
-        ) != (
-            specification
-            .registry_position
-        ):
+            row["registry_position"]
+        ) != specification.registry_position:
             raise RuntimeError(
                 "Registry-position mismatch "
-                f"for task "
+                "for task "
                 f"{specification.task_id}."
             )
 
         if (
             str(
-                row[
-                    "dataset_name"
-                ]
+                row["dataset_name"]
             )
             != specification.dataset_name
         ):
             raise RuntimeError(
-                "Dataset-name mismatch for "
-                f"task {specification.task_id}."
+                "Dataset-name mismatch "
+                "for task "
+                f"{specification.task_id}."
             )
 
         if int(
-            row[
-                "n_isr_retained"
-            ]
+            row["n_isr_retained"]
         ) <= 0:
             raise RuntimeError(
                 "Locked case study must "
@@ -443,9 +431,7 @@ def validate_locked_case_study_selection(
 
         if (
             str(
-                row[
-                    "selection_basis"
-                ]
+                row["selection_basis"]
             )
             != (
                 "earliest_registry_task_"
@@ -456,6 +442,11 @@ def validate_locked_case_study_selection(
                 "Unexpected case-study "
                 "selection basis."
             )
+
+
+# =============================================================================
+# BENCHMARK FIGURE DATA
+# =============================================================================
 
 
 def build_primary_delta_plot_data(
@@ -516,10 +507,7 @@ def build_primary_delta_plot_data(
         "display_rank"
     ] = np.arange(
         1,
-        len(
-            frame
-        )
-        + 1,
+        len(frame) + 1,
     )
 
     tolerance = 1e-12
@@ -559,30 +547,26 @@ def build_sparsity_plot_data(
     missing = (
         required
         - set(
-            sparsity_performance
-            .columns
+            sparsity_performance.columns
         )
     )
 
     if missing:
         raise ValueError(
-            "Sparsity-performance table "
-            "is missing columns: "
+            "Sparsity-performance table is "
+            "missing columns: "
             f"{sorted(missing)}"
         )
 
-    frame = (
-        sparsity_performance[
-            [
-                "task_id",
-                "dataset_name",
-                "feature_type",
-                "isr_sparsification",
-                "agnam_minus_no_isr_auroc",
-            ]
+    frame = sparsity_performance[
+        [
+            "task_id",
+            "dataset_name",
+            "feature_type",
+            "isr_sparsification",
+            "agnam_minus_no_isr_auroc",
         ]
-        .copy()
-    )
+    ].copy()
 
     frame[
         "isr_sparsification"
@@ -623,6 +607,11 @@ def build_sparsity_plot_data(
             drop=True
         )
     )
+
+
+# =============================================================================
+# CASE-STUDY NETWORK DATA
+# =============================================================================
 
 
 def build_case_network_data(
@@ -674,21 +663,15 @@ def build_case_network_data(
 
     retained[
         "feature_j"
-    ] = (
-        retained[
-            "feature_j"
-        ]
-        .astype(str)
-    )
+    ] = retained[
+        "feature_j"
+    ].astype(str)
 
     retained[
         "feature_k"
-    ] = (
-        retained[
-            "feature_k"
-        ]
-        .astype(str)
-    )
+    ] = retained[
+        "feature_k"
+    ].astype(str)
 
     retained[
         "selection_frequency"
@@ -735,14 +718,10 @@ def build_case_network_data(
 
     nodes = sorted(
         set(
-            retained[
-                "feature_j"
-            ]
+            retained["feature_j"]
         )
         | set(
-            retained[
-                "feature_k"
-            ]
+            retained["feature_k"]
         )
     )
 
@@ -759,6 +738,11 @@ def build_case_network_data(
     )
 
 
+# =============================================================================
+# LOAD FIGURE INPUTS
+# =============================================================================
+
+
 def load_openml_figure_inputs(
     *,
     publication_root: str | Path = (
@@ -772,9 +756,7 @@ def load_openml_figure_inputs(
     ),
 ) -> OpenMLFigureInputs:
     """
-    Load only frozen benchmark-derived publication inputs.
-
-    Frozen evidence is cryptographically verified first.
+    Load publication inputs only after frozen evidence verification.
     """
     verify_openml_freeze_manifest(
         manifest_path
@@ -793,21 +775,17 @@ def load_openml_figure_inputs(
         / "table_openml_predictive_by_task.csv"
     )
 
-    interaction_distribution = (
-        pd.read_csv(
-            publication_root
-            / (
-                "table_openml_interaction_"
-                "count_distribution.csv"
-            )
+    interaction_distribution = pd.read_csv(
+        publication_root
+        / (
+            "table_openml_interaction_"
+            "count_distribution.csv"
         )
     )
 
-    sparsity_performance = (
-        pd.read_csv(
-            publication_root
-            / "table_openml_sparsity_performance.csv"
-        )
+    sparsity_performance = pd.read_csv(
+        publication_root
+        / "table_openml_sparsity_performance.csv"
     )
 
     inference = pd.read_csv(
@@ -848,7 +826,7 @@ def load_openml_figure_inputs(
 
         if not path.exists():
             raise FileNotFoundError(
-                f"Case-study pair file "
+                "Case-study pair file "
                 f"not found: {path}"
             )
 
@@ -883,28 +861,20 @@ def load_openml_figure_inputs(
 def build_locked_case_study_edge_table(
     inputs: OpenMLFigureInputs,
 ) -> pd.DataFrame:
-    """
-    Combined publication table containing only ISR-retained edges from
-    the three locked case studies.
-    """
     rows = []
 
     for specification in (
         LOCKED_CASE_STUDIES
     ):
-        network = (
-            build_case_network_data(
-                inputs.case_pair_tables[
-                    specification.task_id
-                ],
-                specification,
-            )
+        network = build_case_network_data(
+            inputs.case_pair_tables[
+                specification.task_id
+            ],
+            specification,
         )
 
-        for edge in (
-            network.edges.itertuples(
-                index=False
-            )
+        for edge in network.edges.itertuples(
+            index=False
         ):
             rows.append(
                 {
@@ -912,15 +882,13 @@ def build_locked_case_study_edge_table(
                         specification.feature_type
                     ),
                     "registry_position": (
-                        specification
-                        .registry_position
+                        specification.registry_position
                     ),
                     "task_id": (
                         specification.task_id
                     ),
                     "dataset_name": (
-                        specification
-                        .dataset_name
+                        specification.dataset_name
                     ),
                     "feature_j": str(
                         edge.feature_j
@@ -938,6 +906,11 @@ def build_locked_case_study_edge_table(
     return pd.DataFrame(
         rows
     )
+
+
+# =============================================================================
+# FIGURE 1
+# =============================================================================
 
 
 def _primary_inference_row(
@@ -993,9 +966,7 @@ def _panel_label(
         -0.12,
         1.06,
         label,
-        transform=(
-            axis.transAxes
-        ),
+        transform=axis.transAxes,
         fontsize=13,
         fontweight="bold",
         va="top",
@@ -1007,12 +978,10 @@ def create_benchmark_evidence_figure(
     inputs: OpenMLFigureInputs,
 ):
     """
-    Main real-world benchmark figure.
-
-    A: paired AUROC differences across 28 datasets
+    A: paired AUROC change
     B: final ISR interaction-count distribution
-    C: ISR sparsification versus AG-NAM - No-ISR AUROC
-    D: descriptive AG-NAM - Main NAM AUROC by feature type
+    C: sparsification-performance trade-off
+    D: descriptive feature-type comparison
     """
     with plt.rc_context(
         {
@@ -1023,7 +992,6 @@ def create_benchmark_evidence_figure(
             "xtick.labelsize": 8.5,
             "ytick.labelsize": 8.5,
             "legend.fontsize": 8.5,
-            "figure.titlesize": 12,
         }
     ):
         figure, axes = plt.subplots(
@@ -1036,58 +1004,46 @@ def create_benchmark_evidence_figure(
             constrained_layout=True,
         )
 
-        (
-            axis_a,
-            axis_b,
-            axis_c,
-            axis_d,
-        ) = (
-            axes[
-                0,
-                0
-            ],
-            axes[
-                0,
-                1
-            ],
-            axes[
-                1,
-                0
-            ],
-            axes[
-                1,
-                1
-            ],
-        )
+        axis_a = axes[
+            0,
+            0
+        ]
 
-        # =====================================================
-        # PANEL A
-        # =====================================================
+        axis_b = axes[
+            0,
+            1
+        ]
 
-        delta = (
-            build_primary_delta_plot_data(
-                inputs.predictive
-            )
+        axis_c = axes[
+            1,
+            0
+        ]
+
+        axis_d = axes[
+            1,
+            1
+        ]
+
+        # ---------------------------------------------------------------------
+        # A
+        # ---------------------------------------------------------------------
+
+        delta = build_primary_delta_plot_data(
+            inputs.predictive
         )
 
         positive = (
-            delta[
-                "direction"
-            ]
+            delta["direction"]
             == "AG-NAM higher"
         )
 
         negative = (
-            delta[
-                "direction"
-            ]
+            delta["direction"]
             == "AG-NAM lower"
         )
 
         ties = (
-            delta[
-                "direction"
-            ]
+            delta["direction"]
             == "Tie"
         )
 
@@ -1142,10 +1098,8 @@ def create_benchmark_evidence_figure(
             label="Tie",
         )
 
-        primary = (
-            _primary_inference_row(
-                inputs.inference
-            )
+        primary = _primary_inference_row(
+            inputs.inference
         )
 
         annotation = (
@@ -1162,14 +1116,12 @@ def create_benchmark_evidence_figure(
             0.03,
             0.97,
             annotation,
-            transform=(
-                axis_a.transAxes
-            ),
+            transform=axis_a.transAxes,
             va="top",
             ha="left",
             fontsize=8.5,
             bbox={
-                "boxstyle": "round,pad=0.35",
+                "boxstyle": "round,pad=0.30",
                 "facecolor": "white",
                 "edgecolor": "0.75",
                 "alpha": 0.92,
@@ -1190,10 +1142,7 @@ def create_benchmark_evidence_figure(
 
         axis_a.set_xlim(
             0,
-            len(
-                delta
-            )
-            + 1,
+            len(delta) + 1,
         )
 
         axis_a.legend(
@@ -1206,9 +1155,9 @@ def create_benchmark_evidence_figure(
             "A",
         )
 
-        # =====================================================
-        # PANEL B
-        # =====================================================
+        # ---------------------------------------------------------------------
+        # B
+        # ---------------------------------------------------------------------
 
         distribution = (
             inputs
@@ -1223,9 +1172,7 @@ def create_benchmark_evidence_figure(
                 "n_isr_retained"
             ],
             errors="raise",
-        ).astype(
-            int
-        )
+        ).astype(int)
 
         distribution[
             "n_datasets"
@@ -1234,9 +1181,7 @@ def create_benchmark_evidence_figure(
                 "n_datasets"
             ],
             errors="raise",
-        ).astype(
-            int
-        )
+        ).astype(int)
 
         axis_b.bar(
             distribution[
@@ -1250,10 +1195,8 @@ def create_benchmark_evidence_figure(
             linewidth=0.7,
         )
 
-        for row in (
-            distribution.itertuples(
-                index=False
-            )
+        for row in distribution.itertuples(
+            index=False
         ):
             axis_b.text(
                 int(
@@ -1288,8 +1231,7 @@ def create_benchmark_evidence_figure(
         axis_b.set_xticks(
             distribution[
                 "n_isr_retained"
-            ]
-            .tolist()
+            ].tolist()
         )
 
         _panel_label(
@@ -1297,15 +1239,12 @@ def create_benchmark_evidence_figure(
             "B",
         )
 
-        # =====================================================
-        # PANEL C
-        # =====================================================
+        # ---------------------------------------------------------------------
+        # C
+        # ---------------------------------------------------------------------
 
-        sparsity = (
-            build_sparsity_plot_data(
-                inputs
-                .sparsity_performance
-            )
+        sparsity = build_sparsity_plot_data(
+            inputs.sparsity_performance
         )
 
         axis_c.axhline(
@@ -1346,11 +1285,11 @@ def create_benchmark_evidence_figure(
         axis_c.text(
             0.03,
             0.05,
-            f"n = {len(sparsity)} datasets "
-            "with defined sparsification",
-            transform=(
-                axis_c.transAxes
+            (
+                f"n = {len(sparsity)} datasets "
+                "with defined sparsification"
             ),
+            transform=axis_c.transAxes,
             fontsize=8.5,
             va="bottom",
         )
@@ -1360,9 +1299,9 @@ def create_benchmark_evidence_figure(
             "C",
         )
 
-        # =====================================================
-        # PANEL D
-        # =====================================================
+        # ---------------------------------------------------------------------
+        # D
+        # ---------------------------------------------------------------------
 
         feature_types = [
             "numeric",
@@ -1378,20 +1317,14 @@ def create_benchmark_evidence_figure(
 
         grouped_values = []
 
-        for feature_type in (
-            feature_types
-        ):
-            values = (
-                inputs
-                .predictive.loc[
-                    inputs
-                    .predictive[
-                        "feature_type"
-                    ]
-                    == feature_type,
-                    "delta_agnam_main_auroc",
+        for feature_type in feature_types:
+            values = inputs.predictive.loc[
+                inputs.predictive[
+                    "feature_type"
                 ]
-            )
+                == feature_type,
+                "delta_agnam_main_auroc",
+            ]
 
             values = pd.to_numeric(
                 values,
@@ -1428,27 +1361,21 @@ def create_benchmark_evidence_figure(
         ):
             if len(
                 values
-            ) == 1:
-                jitter = np.array(
-                    [
-                        0.0
-                    ]
+            ) <= 1:
+                jitter = np.zeros(
+                    len(values)
                 )
 
             else:
                 jitter = np.linspace(
                     -0.10,
                     0.10,
-                    len(
-                        values
-                    ),
+                    len(values),
                 )
 
             axis_d.scatter(
                 np.full(
-                    len(
-                        values
-                    ),
+                    len(values),
                     position,
                     dtype=np.float64,
                 )
@@ -1481,17 +1408,6 @@ def create_benchmark_evidence_figure(
             ),
         )
 
-        axis_d.text(
-            0.03,
-            0.05,
-            "Descriptive subgroup analysis only",
-            transform=(
-                axis_d.transAxes
-            ),
-            fontsize=8.5,
-            va="bottom",
-        )
-
         _panel_label(
             axis_d,
             "D",
@@ -1500,33 +1416,392 @@ def create_benchmark_evidence_figure(
         return figure
 
 
+# =============================================================================
+# FIGURE 2 — IMPROVED MANUAL LAYOUT
+# =============================================================================
+
+
 def _wrapped_label(
     label: str,
     *,
-    width: int = 14,
+    width: int = 16,
 ) -> str:
     return "\n".join(
         textwrap.wrap(
-            str(
-                label
-            ),
-            width=(
-                width
-            ),
+            str(label),
+            width=width,
             break_long_words=False,
             break_on_hyphens=False,
         )
     )
 
 
+def _manual_case_positions(
+    task_id: int,
+    nodes,
+):
+    """
+    Deterministic publication layouts.
+
+    Coordinates affect presentation only.
+    Interaction identities and frequencies remain unchanged.
+    """
+    nodes = set(
+        nodes
+    )
+
+    if task_id == 146819:
+        coordinates = {
+            "bckgrnd_vdc1": (
+                -1.0,
+                0.55,
+            ),
+            "convect_corr": (
+                1.0,
+                0.55,
+            ),
+            "vconst_2": (
+                -1.0,
+                -0.55,
+            ),
+            "vconst_corr": (
+                1.0,
+                -0.55,
+            ),
+        }
+
+    elif task_id == 3021:
+        coordinates = {
+            "query_on_thyroxine": (
+                -1.20,
+                0.65,
+            ),
+            "T3": (
+                -0.15,
+                0.65,
+            ),
+            "sex": (
+                0.95,
+                0.65,
+            ),
+            "referral_source": (
+                -1.20,
+                -0.55,
+            ),
+            "FTI": (
+                -0.15,
+                -0.55,
+            ),
+            "TSH": (
+                0.95,
+                -0.55,
+            ),
+        }
+
+    elif task_id == 3:
+        coordinates = {
+            "wknck": (
+                0.0,
+                0.0,
+            ),
+            "wkpos": (
+                1.20,
+                0.0,
+            ),
+            "bkxbq": (
+                0.60,
+                1.00,
+            ),
+            "bkxcr": (
+                -0.75,
+                1.15,
+            ),
+            "wkovl": (
+                -1.20,
+                -0.15,
+            ),
+            "qxmsq": (
+                -0.10,
+                -1.10,
+            ),
+            "katri": (
+                2.20,
+                -0.15,
+            ),
+        }
+
+    else:
+        graph = nx.Graph()
+
+        graph.add_nodes_from(
+            sorted(nodes)
+        )
+
+        return nx.spring_layout(
+            graph,
+            seed=42,
+        )
+
+    missing = (
+        nodes
+        - set(
+            coordinates
+        )
+    )
+
+    if missing:
+        raise RuntimeError(
+            "Manual case-study layout is "
+            "missing nodes for task "
+            f"{task_id}: {sorted(missing)}"
+        )
+
+    return {
+        node: (
+            coordinates[
+                node
+            ]
+        )
+        for node in nodes
+    }
+
+
+def _draw_case_network(
+    axis,
+    network: CaseNetworkData,
+    panel_label: str,
+) -> None:
+    specification = (
+        network.specification
+    )
+
+    graph = nx.Graph()
+
+    graph.add_nodes_from(
+        network.nodes
+    )
+
+    for edge in network.edges.itertuples(
+        index=False
+    ):
+        graph.add_edge(
+            str(
+                edge.feature_j
+            ),
+            str(
+                edge.feature_k
+            ),
+            selection_frequency=float(
+                edge.selection_frequency
+            ),
+        )
+
+    positions = _manual_case_positions(
+        specification.task_id,
+        graph.nodes,
+    )
+
+    frequencies = [
+        float(
+            graph.edges[
+                edge
+            ][
+                "selection_frequency"
+            ]
+        )
+        for edge in graph.edges
+    ]
+
+    widths = [
+        1.3
+        + 4.0
+        * frequency
+        for frequency in frequencies
+    ]
+
+    node_size = (
+        2500
+        if specification.task_id
+        != 3
+        else 2200
+    )
+
+    nx.draw_networkx_nodes(
+        graph,
+        positions,
+        ax=axis,
+        node_size=node_size,
+        node_color="white",
+        edgecolors="black",
+        linewidths=1.15,
+    )
+
+    nx.draw_networkx_edges(
+        graph,
+        positions,
+        ax=axis,
+        width=widths,
+        edge_color="0.38",
+        alpha=0.88,
+    )
+
+    node_labels = {
+        node: _wrapped_label(
+            node,
+            width=16,
+        )
+        for node in graph.nodes
+    }
+
+    nx.draw_networkx_labels(
+        graph,
+        positions,
+        labels=node_labels,
+        ax=axis,
+        font_size=(
+            8.0
+            if specification.task_id
+            != 3
+            else 8.5
+        ),
+    )
+
+    edge_labels = {
+        (
+            str(
+                edge.feature_j
+            ),
+            str(
+                edge.feature_k
+            ),
+        ): (
+            f"{float(edge.selection_frequency):.2f}"
+        )
+        for edge in network.edges.itertuples(
+            index=False
+        )
+    }
+
+    nx.draw_networkx_edge_labels(
+        graph,
+        positions,
+        edge_labels=edge_labels,
+        ax=axis,
+        font_size=8.0,
+        rotate=False,
+        label_pos=0.50,
+        bbox={
+            "boxstyle": "round,pad=0.16",
+            "facecolor": "white",
+            "edgecolor": "0.80",
+            "linewidth": 0.5,
+            "alpha": 0.96,
+        },
+    )
+
+    axis.set_title(
+        (
+            f"{specification.dataset_name}\n"
+            f"{specification.feature_type.capitalize()} | "
+            f"{len(network.edges)} retained interactions"
+        ),
+        fontsize=10.5,
+        pad=10,
+    )
+
+    axis.text(
+        -0.05,
+        1.03,
+        panel_label,
+        transform=axis.transAxes,
+        fontsize=13,
+        fontweight="bold",
+        va="top",
+    )
+
+    x_values = np.asarray(
+        [
+            position[
+                0
+            ]
+            for position in positions.values()
+        ],
+        dtype=np.float64,
+    )
+
+    y_values = np.asarray(
+        [
+            position[
+                1
+            ]
+            for position in positions.values()
+        ],
+        dtype=np.float64,
+    )
+
+    x_span = max(
+        float(
+            np.ptp(
+                x_values
+            )
+        ),
+        1.0,
+    )
+
+    y_span = max(
+        float(
+            np.ptp(
+                y_values
+            )
+        ),
+        1.0,
+    )
+
+    axis.set_xlim(
+        float(
+            np.min(
+                x_values
+            )
+        )
+        - 0.25
+        * x_span,
+        float(
+            np.max(
+                x_values
+            )
+        )
+        + 0.25
+        * x_span,
+    )
+
+    axis.set_ylim(
+        float(
+            np.min(
+                y_values
+            )
+        )
+        - 0.30
+        * y_span,
+        float(
+            np.max(
+                y_values
+            )
+        )
+        + 0.30
+        * y_span,
+    )
+
+    axis.set_axis_off()
+
+
 def create_locked_case_study_figure(
     inputs: OpenMLFigureInputs,
 ):
     """
-    Three performance-independent locked case-study interaction
+    Three locked, performance-independent real-world interaction
     networks.
 
-    Only ISR-retained interactions are drawn.
+    Only ISR-retained edges are shown.
 
     Edge labels:
         selection frequency across B=5 discovery runs.
@@ -1536,30 +1811,23 @@ def create_locked_case_study_figure(
             "font.family": "DejaVu Sans",
             "font.size": 9.5,
             "axes.titlesize": 10.5,
-            "figure.titlesize": 12,
+            "figure.titlesize": 13,
         }
     ):
         figure, axes = plt.subplots(
             1,
             3,
             figsize=(
-                15.0,
-                5.6,
+                15.8,
+                5.3,
             ),
-            constrained_layout=True,
         )
 
-        panel_labels = [
+        panel_labels = (
             "A",
             "B",
             "C",
-        ]
-
-        layout_seeds = {
-            146819: 146819,
-            3021: 3021,
-            3: 3,
-        }
+        )
 
         for (
             axis,
@@ -1570,195 +1838,42 @@ def create_locked_case_study_figure(
             panel_labels,
             LOCKED_CASE_STUDIES,
         ):
-            network = (
-                build_case_network_data(
-                    inputs.case_pair_tables[
-                        specification.task_id
-                    ],
-                    specification,
-                )
+            network = build_case_network_data(
+                inputs.case_pair_tables[
+                    specification.task_id
+                ],
+                specification,
             )
 
-            graph = nx.Graph()
-
-            graph.add_nodes_from(
-                network.nodes
-            )
-
-            for edge in (
-                network.edges.itertuples(
-                    index=False
-                )
-            ):
-                graph.add_edge(
-                    str(
-                        edge.feature_j
-                    ),
-                    str(
-                        edge.feature_k
-                    ),
-                    selection_frequency=float(
-                        edge.selection_frequency
-                    ),
-                )
-
-            positions = (
-                nx.spring_layout(
-                    graph,
-                    seed=(
-                        layout_seeds[
-                            specification.task_id
-                        ]
-                    ),
-                    iterations=250,
-                    k=None,
-                )
-            )
-
-            frequencies = [
-                float(
-                    graph.edges[
-                        edge
-                    ][
-                        "selection_frequency"
-                    ]
-                )
-                for edge in (
-                    graph.edges
-                )
-            ]
-
-            widths = [
-                1.2
-                + 4.0
-                * frequency
-                for frequency in (
-                    frequencies
-                )
-            ]
-
-            nx.draw_networkx_nodes(
-                graph,
-                positions,
-                ax=(
-                    axis
-                ),
-                node_size=1900,
-                node_color="white",
-                edgecolors="black",
-                linewidths=1.0,
-            )
-
-            nx.draw_networkx_edges(
-                graph,
-                positions,
-                ax=(
-                    axis
-                ),
-                width=(
-                    widths
-                ),
-                edge_color="0.35",
-                alpha=0.85,
-            )
-
-            node_labels = {
-                node: (
-                    _wrapped_label(
-                        node,
-                        width=13,
-                    )
-                )
-                for node in (
-                    graph.nodes
-                )
-            }
-
-            nx.draw_networkx_labels(
-                graph,
-                positions,
-                labels=(
-                    node_labels
-                ),
-                ax=(
-                    axis
-                ),
-                font_size=8.0,
-            )
-
-            edge_labels = {
-                (
-                    str(
-                        edge.feature_j
-                    ),
-                    str(
-                        edge.feature_k
-                    ),
-                ): (
-                    f"{float(edge.selection_frequency):.2f}"
-                )
-                for edge in (
-                    network
-                    .edges
-                    .itertuples(
-                        index=False
-                    )
-                )
-            }
-
-            nx.draw_networkx_edge_labels(
-                graph,
-                positions,
-                edge_labels=(
-                    edge_labels
-                ),
-                ax=(
-                    axis
-                ),
-                font_size=7.5,
-                rotate=False,
-                label_pos=0.5,
-                bbox={
-                    "boxstyle": "round,pad=0.15",
-                    "facecolor": "white",
-                    "edgecolor": "none",
-                    "alpha": 0.85,
-                },
-            )
-
-            axis.set_title(
-                (
-                    f"{specification.dataset_name}\n"
-                    f"{specification.feature_type.capitalize()} "
-                    f"features | "
-                    f"{len(network.edges)} retained interactions"
-                )
-            )
-
-            axis.text(
-                -0.04,
-                1.04,
+            _draw_case_network(
+                axis,
+                network,
                 panel_label,
-                transform=(
-                    axis.transAxes
-                ),
-                fontsize=13,
-                fontweight="bold",
-                va="top",
             )
-
-            axis.set_axis_off()
 
         figure.suptitle(
             (
-                "Locked real-world AG-NAM interaction structures\n"
-                "Edge labels denote selection frequency; "
-                "only ISR-retained interactions are shown"
+                "ISR-retained interaction structures "
+                "across three locked OpenML case studies"
             ),
-            y=1.04,
+            fontsize=13,
+            y=0.985,
+        )
+
+        figure.subplots_adjust(
+            top=0.82,
+            bottom=0.05,
+            left=0.03,
+            right=0.98,
+            wspace=0.24,
         )
 
         return figure
+
+
+# =============================================================================
+# SAVE FIGURES
+# =============================================================================
 
 
 def save_figure_family(
@@ -1811,16 +1926,15 @@ def save_figure_family(
     )
 
     return FigureFileSet(
-        png=(
-            png_path
-        ),
-        pdf=(
-            pdf_path
-        ),
-        svg=(
-            svg_path
-        ),
+        png=png_path,
+        pdf=pdf_path,
+        svg=svg_path,
     )
+
+
+# =============================================================================
+# PUBLIC FIGURE GENERATION
+# =============================================================================
 
 
 def generate_openml_publication_figures(
@@ -1839,23 +1953,21 @@ def generate_openml_publication_figures(
     ),
 ) -> OpenMLFigureExportPaths:
     """
-    Generate publication-quality figures exclusively from frozen
+    Generate publication figures exclusively from verified frozen
     OpenML evidence.
 
     No model fitting occurs.
     """
-    inputs = (
-        load_openml_figure_inputs(
-            publication_root=(
-                publication_root
-            ),
-            benchmark_root=(
-                benchmark_root
-            ),
-            manifest_path=(
-                manifest_path
-            ),
-        )
+    inputs = load_openml_figure_inputs(
+        publication_root=(
+            publication_root
+        ),
+        benchmark_root=(
+            benchmark_root
+        ),
+        manifest_path=(
+            manifest_path
+        ),
     )
 
     benchmark_figure = (
@@ -1864,17 +1976,15 @@ def generate_openml_publication_figures(
         )
     )
 
-    benchmark_paths = (
-        save_figure_family(
-            benchmark_figure,
-            output_root=(
-                output_root
-            ),
-            stem=(
-                "figure_openml_"
-                "benchmark_evidence"
-            ),
-        )
+    benchmark_paths = save_figure_family(
+        benchmark_figure,
+        output_root=(
+            output_root
+        ),
+        stem=(
+            "figure_openml_"
+            "benchmark_evidence"
+        ),
     )
 
     plt.close(
@@ -1887,17 +1997,15 @@ def generate_openml_publication_figures(
         )
     )
 
-    case_paths = (
-        save_figure_family(
-            case_figure,
-            output_root=(
-                output_root
-            ),
-            stem=(
-                "figure_openml_"
-                "locked_case_studies"
-            ),
-        )
+    case_paths = save_figure_family(
+        case_figure,
+        output_root=(
+            output_root
+        ),
+        stem=(
+            "figure_openml_"
+            "locked_case_studies"
+        ),
     )
 
     plt.close(
