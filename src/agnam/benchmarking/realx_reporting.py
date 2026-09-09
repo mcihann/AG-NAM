@@ -1333,18 +1333,24 @@ def generate_main_realx_figure(
     )
 
     fig.savefig(
-        png_path,
+        str(
+            png_path.resolve()
+        ),
         dpi=600,
         bbox_inches="tight",
     )
 
     fig.savefig(
-        pdf_path,
+        str(
+            pdf_path.resolve()
+        ),
         bbox_inches="tight",
     )
 
     fig.savefig(
-        svg_path,
+        str(
+            svg_path.resolve()
+        ),
         bbox_inches="tight",
     )
 
