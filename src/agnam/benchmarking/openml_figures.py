@@ -977,10 +977,12 @@ def create_benchmark_evidence_figure(
     inputs: OpenMLFigureInputs,
 ):
     """
-    A: paired AUROC change
-    B: final ISR interaction-count distribution
-    C: sparsification-performance trade-off
-    D: descriptive feature-type comparison
+    Publication-ready OpenML benchmark evidence figure.
+
+    A: prespecified primary predictive comparison
+    B: final ISR-retained interaction-count distribution
+    C: ISR sparsification versus predictive change
+    D: descriptive predictive effect by predictor regime
     """
     with plt.rc_context(
         {
@@ -997,35 +999,20 @@ def create_benchmark_evidence_figure(
             2,
             2,
             figsize=(
-                13.2,
-                9.4,
+                12.4,
+                8.6,
             ),
             constrained_layout=True,
         )
 
-        axis_a = axes[
-            0,
-            0
-        ]
+        axis_a = axes[0, 0]
+        axis_b = axes[0, 1]
+        axis_c = axes[1, 0]
+        axis_d = axes[1, 1]
 
-        axis_b = axes[
-            0,
-            1
-        ]
-
-        axis_c = axes[
-            1,
-            0
-        ]
-
-        axis_d = axes[
-            1,
-            1
-        ]
-
-        # ---------------------------------------------------------------------
-        # PANEL A
-        # ---------------------------------------------------------------------
+        # =====================================================================
+        # PANEL A — Primary predictive comparison
+        # =====================================================================
 
         delta = build_primary_delta_plot_data(
             inputs.predictive
@@ -1128,11 +1115,14 @@ def create_benchmark_evidence_figure(
         )
 
         axis_a.set_title(
-            "Paired predictive change across 28 datasets"
+            "A  Primary predictive comparison",
+            loc="left",
+            fontweight="bold",
+            pad=8,
         )
 
         axis_a.set_xlabel(
-            "Datasets ordered by AG-NAM − Main NAM AUROC"
+            "Datasets ordered by ΔAUROC"
         )
 
         axis_a.set_ylabel(
@@ -1149,14 +1139,9 @@ def create_benchmark_evidence_figure(
             frameon=False,
         )
 
-        _panel_label(
-            axis_a,
-            "A",
-        )
-
-        # ---------------------------------------------------------------------
-        # PANEL B
-        # ---------------------------------------------------------------------
+        # =====================================================================
+        # PANEL B — ISR-retained interaction count
+        # =====================================================================
 
         distribution = (
             inputs
@@ -1182,10 +1167,14 @@ def create_benchmark_evidence_figure(
             errors="raise",
         ).astype(int)
 
+        # Use categorical bar positions so gaps such as 4 -> 7 -> 9
+        # do not create unnecessary whitespace.
+        bar_positions = np.arange(
+            len(distribution)
+        )
+
         axis_b.bar(
-            distribution[
-                "n_isr_retained"
-            ],
+            bar_positions,
             distribution[
                 "n_datasets"
             ],
@@ -1194,16 +1183,15 @@ def create_benchmark_evidence_figure(
             linewidth=0.7,
         )
 
-        for row in distribution.itertuples(
-            index=False
+        for position, row in zip(
+            bar_positions,
+            distribution.itertuples(
+                index=False
+            ),
         ):
             axis_b.text(
-                int(
-                    row.n_isr_retained
-                ),
-                int(
-                    row.n_datasets
-                )
+                position,
+                int(row.n_datasets)
                 + 0.25,
                 str(
                     int(
@@ -1216,7 +1204,10 @@ def create_benchmark_evidence_figure(
             )
 
         axis_b.set_title(
-            "Final interaction-set sparsity"
+            "B  ISR-retained interaction count",
+            loc="left",
+            fontweight="bold",
+            pad=8,
         )
 
         axis_b.set_xlabel(
@@ -1228,19 +1219,19 @@ def create_benchmark_evidence_figure(
         )
 
         axis_b.set_xticks(
-            distribution[
-                "n_isr_retained"
-            ].tolist()
+            bar_positions,
+            labels=(
+                distribution[
+                    "n_isr_retained"
+                ]
+                .astype(str)
+                .tolist()
+            ),
         )
 
-        _panel_label(
-            axis_b,
-            "B",
-        )
-
-        # ---------------------------------------------------------------------
-        # PANEL C
-        # ---------------------------------------------------------------------
+        # =====================================================================
+        # PANEL C — ISR sparsification
+        # =====================================================================
 
         sparsity = build_sparsity_plot_data(
             inputs.sparsity_performance
@@ -1265,7 +1256,10 @@ def create_benchmark_evidence_figure(
         )
 
         axis_c.set_title(
-            "ISR sparsification–performance trade-off"
+            "C  ISR sparsification and predictive change",
+            loc="left",
+            fontweight="bold",
+            pad=8,
         )
 
         axis_c.set_xlabel(
@@ -1293,14 +1287,9 @@ def create_benchmark_evidence_figure(
             va="bottom",
         )
 
-        _panel_label(
-            axis_c,
-            "C",
-        )
-
-        # ---------------------------------------------------------------------
-        # PANEL D
-        # ---------------------------------------------------------------------
+        # =====================================================================
+        # PANEL D — Predictor-regime description
+        # =====================================================================
 
         feature_types = [
             "numeric",
@@ -1308,7 +1297,7 @@ def create_benchmark_evidence_figure(
             "categorical",
         ]
 
-        feature_labels = [
+        feature_names = [
             "Numeric",
             "Mixed",
             "Categorical",
@@ -1336,6 +1325,17 @@ def create_benchmark_evidence_figure(
                 values
             )
 
+        feature_labels = [
+            (
+                f"{name}\n"
+                f"(n={len(values)})"
+            )
+            for name, values in zip(
+                feature_names,
+                grouped_values,
+            )
+        ]
+
         axis_d.axhline(
             0.0,
             linewidth=1.0,
@@ -1358,13 +1358,10 @@ def create_benchmark_evidence_figure(
             grouped_values,
             start=1,
         ):
-            if len(
-                values
-            ) <= 1:
+            if len(values) <= 1:
                 jitter = np.zeros(
                     len(values)
                 )
-
             else:
                 jitter = np.linspace(
                     -0.10,
@@ -1385,7 +1382,10 @@ def create_benchmark_evidence_figure(
             )
 
         axis_d.set_title(
-            "Descriptive effect by predictor type"
+            "D  Predictive ΔAUROC by predictor regime",
+            loc="left",
+            fontweight="bold",
+            pad=8,
         )
 
         axis_d.set_xlabel(
@@ -1405,11 +1405,6 @@ def create_benchmark_evidence_figure(
             labels=(
                 feature_labels
             ),
-        )
-
-        _panel_label(
-            axis_d,
-            "D",
         )
 
         return figure
@@ -1715,22 +1710,15 @@ def _draw_case_network(
 
     axis.set_title(
         (
-            f"{specification.dataset_name}\n"
-            f"{specification.feature_type.capitalize()} | "
+            f"{panel_label}  "
+            f"{specification.feature_type.capitalize()}\n"
+            f"{specification.dataset_name} | "
             f"{len(network.edges)} retained interactions"
         ),
         fontsize=10.5,
-        pad=10,
-    )
-
-    axis.text(
-        -0.05,
-        1.03,
-        panel_label,
-        transform=axis.transAxes,
-        fontsize=13,
         fontweight="bold",
-        va="top",
+        loc="left",
+        pad=10,
     )
 
     x_values = np.asarray(
@@ -1812,20 +1800,17 @@ def create_locked_case_study_figure(
     inputs: OpenMLFigureInputs,
 ):
     """
-    Three locked, performance-independent real-world interaction
-    networks.
+    Three locked, performance-independent OpenML interaction networks.
 
-    Only ISR-retained edges are shown.
-
-    Edge labels:
-        selection frequency across B=5 discovery runs.
+    Only ISR-retained interactions are shown.
+    Edge labels denote selection frequency across the five
+    discovery runs.
     """
     with plt.rc_context(
         {
             "font.family": "DejaVu Sans",
             "font.size": 9.5,
             "axes.titlesize": 10.5,
-            "figure.titlesize": 13,
         }
     ):
         figure, axes = plt.subplots(
@@ -1833,7 +1818,7 @@ def create_locked_case_study_figure(
             3,
             figsize=(
                 15.8,
-                5.3,
+                4.9,
             ),
         )
 
@@ -1865,17 +1850,11 @@ def create_locked_case_study_figure(
                 panel_label,
             )
 
-        figure.suptitle(
-            (
-                "ISR-retained interaction structures "
-                "across three locked OpenML case studies"
-            ),
-            fontsize=13,
-            y=0.985,
-        )
+        # No global title:
+        # the figure-level description belongs in the manuscript caption.
 
         figure.subplots_adjust(
-            top=0.82,
+            top=0.88,
             bottom=0.05,
             left=0.03,
             right=0.98,
