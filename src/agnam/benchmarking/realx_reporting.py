@@ -1088,6 +1088,14 @@ def generate_main_realx_figure(
     Path,
     Path,
 ]:
+    """
+    Generate the final publication-ready Real-X main figure.
+
+    Panel A contains the prespecified confirmatory endpoint.
+    Panels B-D are secondary/descriptive visualizations only.
+
+    No statistical analysis is performed in this reporting function.
+    """
     png_path = Path(
         png_path
     )
@@ -1127,15 +1135,15 @@ def generate_main_realx_figure(
         2,
         2,
         figsize=(
-            12.6,
-            9.2,
+            12.4,
+            8.6,
         ),
         constrained_layout=True,
     )
 
-    # -------------------------------------------------------------------------
-    # Panel A — Prespecified primary endpoint
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # PANEL A — Prespecified confirmatory primary endpoint
+    # =========================================================================
 
     ax = axes[
         0,
@@ -1168,7 +1176,7 @@ def generate_main_realx_figure(
         0.0,
         linestyle="--",
         linewidth=1.0,
-        alpha=0.7,
+        alpha=0.70,
     )
 
     ax.set_yticks(
@@ -1186,13 +1194,14 @@ def generate_main_realx_figure(
     )
 
     ax.set_xlabel(
-        "Interaction AUPRC − random-ranking prevalence"
+        "AUPRC advantage over random ranking"
     )
 
     ax.set_title(
         "A  Prespecified primary endpoint",
         loc="left",
         fontweight="bold",
+        pad=8,
     )
 
     ax.grid(
@@ -1201,34 +1210,40 @@ def generate_main_realx_figure(
     )
 
     primary_annotation = (
-        f"W = {float(primary_result['wilcoxon_statistic']):.1f}\n"
-        f"one-sided p = {float(primary_result['p_value']):.4g}\n"
+        f"W = "
+        f"{float(primary_result['wilcoxon_statistic']):.1f}\n"
+        f"one-sided p = "
+        f"{float(primary_result['p_value']):.4g}\n"
         f"{int(primary_result['positive_dataset_count'])}/"
-        f"{int(primary_result['n_datasets'])} datasets > 0"
+        f"{int(primary_result['n_datasets'])} "
+        f"datasets positive"
     )
 
     ax.text(
         0.98,
-        0.03,
+        0.035,
         primary_annotation,
         transform=ax.transAxes,
         ha="right",
         va="bottom",
         fontsize=9.5,
+        linespacing=1.25,
     )
 
-    # -------------------------------------------------------------------------
-    # Panel B — Interaction-ranking AUPRC
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # PANEL B — Interaction recovery
+    # =========================================================================
 
-    auprc_series = extract_figure_series(
-        dataset_strength,
-        metric="mean_interaction_auprc",
-        strengths=(
-            "weak",
-            "moderate",
-            "strong",
-        ),
+    auprc_series = (
+        extract_figure_series(
+            dataset_strength,
+            metric="mean_interaction_auprc",
+            strengths=(
+                "weak",
+                "moderate",
+                "strong",
+            ),
+        )
     )
 
     _scatter_box(
@@ -1236,19 +1251,25 @@ def generate_main_realx_figure(
             0,
             1
         ],
-        series=auprc_series,
+        series=(
+            auprc_series
+        ),
         strengths=(
             "weak",
             "moderate",
             "strong",
         ),
-        ylabel="Interaction-ranking AUPRC",
-        title="B  Interaction recovery across signal strength",
+        ylabel=(
+            "Interaction-ranking AUPRC"
+        ),
+        title=(
+            "B  Interaction recovery"
+        ),
     )
 
-    # -------------------------------------------------------------------------
-    # Panel C — ISR sparsification
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # PANEL C — ISR sparsification
+    # =========================================================================
 
     sparsification_series = (
         extract_figure_series(
@@ -1279,8 +1300,12 @@ def generate_main_realx_figure(
             "moderate",
             "strong",
         ),
-        ylabel="ISR sparsification fraction",
-        title="C  ISR filtering across signal strength",
+        ylabel=(
+            "ISR sparsification fraction"
+        ),
+        title=(
+            "C  ISR sparsification"
+        ),
     )
 
     axes[
@@ -1291,19 +1316,21 @@ def generate_main_realx_figure(
         1.04,
     )
 
-    # -------------------------------------------------------------------------
-    # Panel D — Predictive consequence
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # PANEL D — Predictive consequence
+    # =========================================================================
 
-    delta_series = extract_figure_series(
-        dataset_strength,
-        metric="delta_auroc",
-        strengths=(
-            "null",
-            "weak",
-            "moderate",
-            "strong",
-        ),
+    delta_series = (
+        extract_figure_series(
+            dataset_strength,
+            metric="delta_auroc",
+            strengths=(
+                "null",
+                "weak",
+                "moderate",
+                "strong",
+            ),
+        )
     )
 
     _scatter_box(
@@ -1311,26 +1338,30 @@ def generate_main_realx_figure(
             1,
             1
         ],
-        series=delta_series,
+        series=(
+            delta_series
+        ),
         strengths=(
             "null",
             "weak",
             "moderate",
             "strong",
         ),
-        ylabel="ΔAUROC (AG-NAM − Main NAM)",
-        title="D  Predictive change across signal strength",
+        ylabel=(
+            "ΔAUROC (AG-NAM − Main NAM)"
+        ),
+        title=(
+            "D  Predictive ΔAUROC"
+        ),
         zero_line=True,
     )
 
-    fig.suptitle(
-        (
-            "Real-X semi-synthetic evaluation of "
-            "interaction recovery, filtering, and prediction"
-        ),
-        fontsize=15,
-        fontweight="bold",
-    )
+    # =========================================================================
+    # Publication export
+    #
+    # Deliberately no global figure title.
+    # The complete figure description belongs in the manuscript caption.
+    # =========================================================================
 
     fig.savefig(
         str(
