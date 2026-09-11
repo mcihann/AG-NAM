@@ -1,0 +1,4 @@
+feature_type,registry_position,task_id,dataset_name,n_isr_retained,selection_basis,predictive_performance_used
+numeric,15,146819,climate-model-simulation-crashes,2,earliest_registry_task_with_isr_interaction,False
+mixed,9,3021,sick,4,earliest_registry_task_with_isr_interaction,False
+categorical,2,3,kr-vs-kp,7,earliest_registry_task_with_isr_interaction,False

@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use AG-NAM, its benchmarking framework, or its publication artifacts, please cite this software."
+title: "AG-NAM: Attention-Guided Neural Additive Models for Reproducible and Interpretable Feature Interaction Learning"
+type: software
+authors:
+  - family-names: "Cihan"
+    given-names: "Mücahit"
+version: "1.0.0"
+license: "MIT"
+keywords:
+  - neural additive models
+  - interpretable machine learning
+  - feature interactions
+  - explainable artificial intelligence
+  - tabular learning
+  - reproducibility
+abstract: >-
+  AG-NAM is a reproducibility-aware neural additive modeling framework for
+  selective pairwise feature interaction learning. It combines residual-guided
+  candidate discovery, repeated-selection reproducibility, Interaction
+  Stability Refinement based on purified interaction-surface agreement, and
+  fresh final-model training while preserving an explicitly decomposable
+  additive predictor.

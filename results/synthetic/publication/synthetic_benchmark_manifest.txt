@@ -1,0 +1,22 @@
+AG-NAM Synthetic Benchmark Manifest
+==================================
+
+Primary benchmark status: COMPLETE
+Scenarios: S1, S2, S3, S4
+Independent realizations per scenario: 20
+Total locked realizations: 80
+
+Primary endpoint: AUROC
+Primary comparison: AG-NAM vs Main NAM
+Primary multiplicity control: Holm across 4 scenario tests
+
+Secondary family: 20 prespecified tests
+Secondary multiplicity control: Holm
+
+Bootstrap resamples: 10000
+Bootstrap seed: 20260902
+Alpha: 0.05
+
+The publication tables are derived from the immutable
+per-realization benchmark checkpoints through the locked
+statistical-analysis protocol.

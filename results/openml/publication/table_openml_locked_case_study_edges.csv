@@ -1,0 +1,14 @@
+feature_type,registry_position,task_id,dataset_name,feature_j,feature_k,selection_frequency,isr_retained
+numeric,15,146819,climate-model-simulation-crashes,bckgrnd_vdc1,convect_corr,0.6,True
+numeric,15,146819,climate-model-simulation-crashes,vconst_2,vconst_corr,0.6,True
+mixed,9,3021,sick,T3,query_on_thyroxine,0.8,True
+mixed,9,3021,sick,FTI,TSH,0.6,True
+mixed,9,3021,sick,FTI,referral_source,0.6,True
+mixed,9,3021,sick,T3,sex,0.6,True
+categorical,2,3,kr-vs-kp,bkxbq,wknck,0.8,True
+categorical,2,3,kr-vs-kp,bkxbq,wkpos,0.8,True
+categorical,2,3,kr-vs-kp,bkxcr,wknck,0.8,True
+categorical,2,3,kr-vs-kp,katri,wkpos,0.8,True
+categorical,2,3,kr-vs-kp,qxmsq,wknck,0.6,True
+categorical,2,3,kr-vs-kp,wknck,wkovl,0.6,True
+categorical,2,3,kr-vs-kp,wknck,wkpos,0.6,True

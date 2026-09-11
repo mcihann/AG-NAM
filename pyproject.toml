@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agnam"
-version = "0.1.0"
-description = "Research implementation of AG-NAM for reproducible feature interaction discovery."
+version = "1.0.0"
+description = "Research implementation of AG-NAM for reproducible and interpretable feature interaction learning."
 requires-python = ">=3.10,<3.11"
 
 dependencies = [
@@ -29,8 +29,8 @@ dev = [
 ]
 
 baselines = [
-    "xgboost>=2.1",
-    "catboost>=1.2"
+    "interpret-core==0.7.8",
+    "catboost==1.2.10"
 ]
 
 [tool.setuptools]

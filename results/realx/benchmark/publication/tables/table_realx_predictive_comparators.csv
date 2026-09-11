@@ -1,0 +1,49 @@
+Strength,Comparator,Metric,n datasets,Mean difference,Median difference,95% CI lower,95% CI upper,Positive datasets,Zero datasets,Negative datasets,Inference
+null,AG-NAM minus Main NAM,delta_auprc,9,-0.0004007797981829,0.0,-0.0026625699865795,0.0011542451248591,3,2,4,descriptive_only
+null,AG-NAM minus Main NAM,delta_auroc,9,-0.0001258182182436,0.0,-0.0020416357704573,0.0014699266369543,4,2,3,descriptive_only
+null,AG-NAM minus Main NAM,delta_balanced_accuracy,9,-0.0005382498381258,0.0,-0.0033390503797816,0.0022362560531819,3,2,4,descriptive_only
+null,AG-NAM minus Main NAM,delta_f1,9,-0.0066078559973373,0.0,-0.0215500083110108,0.0028380115439832,3,2,4,descriptive_only
+null,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auprc,9,0.0001846790265525,0.0016657695763523,-0.0059240656838793,0.0044800043379844,7,1,1,descriptive_only
+null,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auroc,9,-0.0005711482436147,0.0004068508670828,-0.0044760695617764,0.0020572104057818,6,1,2,descriptive_only
+null,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auprc,9,0.0007088448437467,0.0003139514303407,-0.0002520543574756,0.0016798772080829,5,2,2,descriptive_only
+null,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auroc,9,0.0006412389684112,1.5833223377947904e-07,-0.0003562094146898,0.0017854333891941,5,2,2,descriptive_only
+null,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auprc,9,0.0024122272921302,0.0026598470815822,-0.0002605702980783,0.0051608877310549,6,0,3,descriptive_only
+null,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auroc,9,0.0006583824622372,0.0011432406596656,-0.0011418580734749,0.0024774555236885,6,0,3,descriptive_only
+null,Oracle minus AG-NAM,oracle_minus_agnam_auprc,9,0.0004007073533563,0.0,-0.0011542451248591,0.0026626146762106,4,2,3,descriptive_only
+null,Oracle minus AG-NAM,oracle_minus_agnam_auroc,9,0.0001258182182436,0.0,-0.0014699266369543,0.0020416357704573,3,2,4,descriptive_only
+weak,AG-NAM minus Main NAM,delta_auprc,9,0.0013858649592222,0.0,-0.0004375590419147,0.0042482067198681,4,2,3,descriptive_only
+weak,AG-NAM minus Main NAM,delta_auroc,9,0.0012834146715902,0.0,-0.0004837813777355,0.0038906272032476,4,2,3,descriptive_only
+weak,AG-NAM minus Main NAM,delta_balanced_accuracy,9,2.603954443044872e-05,0.0,-0.0018983923780874,0.0024554295887073,3,2,4,descriptive_only
+weak,AG-NAM minus Main NAM,delta_f1,9,0.0017709437739436,0.0,-0.0028396462413209,0.0066212375495232,4,2,3,descriptive_only
+weak,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auprc,9,-0.0009238853327107,4.59587667996253e-05,-0.0031472671555667,0.0011262892136216,5,0,4,descriptive_only
+weak,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auroc,9,0.0004244905800609,-0.000103519668737,-0.0022693426078936,0.0034542478999991,4,0,5,descriptive_only
+weak,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auprc,9,0.0014676396699896,0.0002780379902642,-0.0002438243545977,0.0042344304667028,5,2,2,descriptive_only
+weak,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auroc,9,0.0009949733448657,4.003603242916931e-05,-0.0005965365227878,0.0034652843023196,5,2,2,descriptive_only
+weak,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auprc,9,-0.0020101078402221,-0.0035530824535576,-0.004772803162448,0.0008710763133656,3,0,6,descriptive_only
+weak,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auroc,9,-0.0017971539459575,-0.0033874736871134,-0.0062970466390799,0.0029110710467921,3,0,6,descriptive_only
+weak,Oracle minus AG-NAM,oracle_minus_agnam_auprc,9,0.0122943558004321,0.0120839283923838,0.0032347551764067,0.0217347216016672,6,0,3,descriptive_only
+weak,Oracle minus AG-NAM,oracle_minus_agnam_auroc,9,0.0112455112544976,0.0088213907589657,0.0019590561642366,0.02050984273635,6,0,3,descriptive_only
+moderate,AG-NAM minus Main NAM,delta_auprc,9,0.0224879386056825,0.0010492970199602,0.0050939036674283,0.0413839641616557,6,1,2,descriptive_only
+moderate,AG-NAM minus Main NAM,delta_auroc,9,0.0200718128639556,0.0015801580158016,0.0048510626541649,0.0358440234303875,6,1,2,descriptive_only
+moderate,AG-NAM minus Main NAM,delta_balanced_accuracy,9,0.0123141176897319,0.0085454545454545,0.0012092296591222,0.0233505112134075,6,1,2,descriptive_only
+moderate,AG-NAM minus Main NAM,delta_f1,9,0.014453580463496,0.0140266794472402,0.004196761424359,0.0252700566929214,7,1,1,descriptive_only
+moderate,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auprc,9,-0.0015092495271186,-0.0012057758919316,-0.0043760537537949,0.0019142456540915,2,0,7,descriptive_only
+moderate,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auroc,9,-0.0021327105653288,-0.0009399763326755,-0.0045473353507615,0.0005768133519142,1,0,8,descriptive_only
+moderate,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auprc,9,0.0215508410927584,0.0042784794618242,0.0064870894788811,0.0375657199743635,7,1,1,descriptive_only
+moderate,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auroc,9,0.0185921114690052,0.0025378495210428,0.0051306344815261,0.0321759785225027,6,1,2,descriptive_only
+moderate,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auprc,9,-0.0020016251040205,-0.0015641626342768,-0.0059434310467674,0.0015764478547273,3,0,6,descriptive_only
+moderate,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auroc,9,-0.0004920988882466,0.000539828601771,-0.0053440700320709,0.0034201776522202,5,0,4,descriptive_only
+moderate,Oracle minus AG-NAM,oracle_minus_agnam_auprc,9,0.0171364214772269,0.0141552008705039,0.0039076176501052,0.0318576276652888,6,0,3,descriptive_only
+moderate,Oracle minus AG-NAM,oracle_minus_agnam_auroc,9,0.0156354887120868,0.0158588598993109,0.0030119948806957,0.0299029337804677,5,0,4,descriptive_only
+strong,AG-NAM minus Main NAM,delta_auprc,9,0.045380831900808,0.0066286674417822,0.0110758775522847,0.0821895293424856,5,1,3,descriptive_only
+strong,AG-NAM minus Main NAM,delta_auroc,9,0.0436811615254806,0.0098964648820072,0.0119860297816354,0.0771890256842832,7,1,1,descriptive_only
+strong,AG-NAM minus Main NAM,delta_balanced_accuracy,9,0.0343323135765093,0.0,0.0080975409327389,0.0632143199505293,4,1,4,descriptive_only
+strong,AG-NAM minus Main NAM,delta_f1,9,0.0428468225280029,0.0095180421811888,0.007446848075605,0.0822398587519717,6,1,2,descriptive_only
+strong,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auprc,9,-0.0021072359963354,-0.0008270189213537,-0.0044669834779445,0.0002158097507576,4,0,5,descriptive_only
+strong,AG-NAM minus No-ISR AG-NAM,agnam_minus_no_isr_auroc,9,-0.000193526476322,0.0004183943434649,-0.0037626646297785,0.0040405792054194,5,0,4,descriptive_only
+strong,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auprc,9,0.0398611389417505,2.079928080949145e-05,0.0081285951169607,0.0732426301544869,5,1,3,descriptive_only
+strong,AG-NAM minus Random-Pair NAM,agnam_minus_random_pair_auroc,9,0.0372776019078485,0.0030812636514692,0.0077839238313713,0.0678353986931123,6,1,2,descriptive_only
+strong,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auprc,9,0.0103160590660478,0.0045929166653678,-0.0013941246595986,0.028588566141407,6,0,3,descriptive_only
+strong,AG-NAM minus Single-Run AG-NAM,agnam_minus_single_run_auroc,9,0.0084791490675444,0.0042194161616815,-0.0051154525706798,0.0287539722511974,6,0,3,descriptive_only
+strong,Oracle minus AG-NAM,oracle_minus_agnam_auprc,9,0.0216673461446999,0.0132083291127621,0.0069435412104378,0.0424850782183048,8,0,1,descriptive_only
+strong,Oracle minus AG-NAM,oracle_minus_agnam_auroc,9,0.0193113114249439,0.0099425523295867,0.004942294302779,0.0396789106823133,7,0,2,descriptive_only

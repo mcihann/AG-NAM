@@ -1,0 +1,14 @@
+{
+  "figure": {
+    "pdf": "results\\realx\\benchmark\\publication\\figures\\figure_realx_main.pdf",
+    "png": "results\\realx\\benchmark\\publication\\figures\\figure_realx_main.png",
+    "svg": "results\\realx\\benchmark\\publication\\figures\\figure_realx_main.svg"
+  },
+  "frozen_evidence_sha256": "be16b99ee9ed26428b3396b065045b8651bdfa2174e22284c04db538cdfe3b7e",
+  "phase6e_git_commit": "0d366eadd38c8425b9fe6182a21f7a3acf14a2e5",
+  "png_dpi": 600,
+  "reporting_schema_version": "realx_publication_reporting_v1",
+  "secondary_confirmatory_tests": 0,
+  "secondary_inference": "descriptive_only",
+  "status": "PUBLICATION_FIGURE_EXPORTED"
+}

@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *.pyd
 *.so
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -51,3 +52,9 @@ figures/generated/*
 tmp/
 temp/
 *.tmp
+
+# Local environment / publication-preparation artifacts
+requirements_full.txt
+supplementary_assets.txt
+supplementary_table_sources.txt
+synthetic_scenario_source.txt

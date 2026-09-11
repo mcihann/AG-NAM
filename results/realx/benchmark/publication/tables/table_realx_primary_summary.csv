@@ -1,0 +1,2 @@
+Experimental unit,Condition,Lambda,Datasets,Realizations per dataset,Wilcoxon statistic,One-sided p-value,Reject H0,Mean difference,Median difference,95% CI lower,95% CI upper,Positive datasets,Zero datasets,Negative datasets
+dataset,moderate,1.0,9,5,45.0,0.001953125,True,0.15323959929058684,0.037728394269844076,0.058755168262636236,0.2568241012601122,9,0,0

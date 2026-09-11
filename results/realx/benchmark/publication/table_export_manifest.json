@@ -1,0 +1,15 @@
+{
+  "frozen_evidence_sha256": "be16b99ee9ed26428b3396b065045b8651bdfa2174e22284c04db538cdfe3b7e",
+  "phase6e_git_commit": "0d366eadd38c8425b9fe6182a21f7a3acf14a2e5",
+  "reporting_schema_version": "realx_publication_reporting_v1",
+  "secondary_confirmatory_tests": 0,
+  "secondary_inference": "descriptive_only",
+  "status": "PUBLICATION_TABLES_EXPORTED",
+  "tables": {
+    "feature_type_descriptive": "results\\realx\\benchmark\\publication\\tables\\table_realx_feature_type_descriptive.csv",
+    "predictive_comparators": "results\\realx\\benchmark\\publication\\tables\\table_realx_predictive_comparators.csv",
+    "primary_by_dataset": "results\\realx\\benchmark\\publication\\tables\\table_realx_primary_by_dataset.csv",
+    "primary_summary": "results\\realx\\benchmark\\publication\\tables\\table_realx_primary_summary.csv",
+    "strength_descriptive": "results\\realx\\benchmark\\publication\\tables\\table_realx_strength_descriptive.csv"
+  }
+}
