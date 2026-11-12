@@ -1,0 +1,20 @@
+{
+  "analysis_status": "reviewer_requested_post_submission",
+  "analysis_name": "attention_score_ablation_aggregate",
+  "scenarios": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "allow_incomplete": false,
+  "bootstrap_seed": 26090806,
+  "bootstrap_resamples": 10000,
+  "formal_hypothesis_tests": false,
+  "locked_primary_results_modified": false,
+  "outputs": {
+    "realization_summary": "results\\revision\\attention_ablation\\analysis\\realization_summary_long.csv",
+    "mode_summary": "results\\revision\\attention_ablation\\analysis\\mode_summary.csv",
+    "paired_comparisons": "results\\revision\\attention_ablation\\analysis\\paired_comparisons.csv"
+  }
+}
