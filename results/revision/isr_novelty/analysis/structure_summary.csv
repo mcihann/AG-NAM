@@ -1,0 +1,5 @@
+scenario,n_realizations,mean_raw_retained,mean_purified_retained,mean_overlap,mean_raw_only,mean_purified_only,mean_raw_purified_jaccard,identical_set_fraction
+S1,20,2.55,4.2,1.75,0.8,2.45,0.405952380952381,0.0
+S2,20,3.2,4.3,2.65,0.55,1.65,0.5855952380952381,0.1
+S3,20,1.7,3.3,1.3,0.4,2.0,0.38130952380952376,0.0
+S4,20,0.8,1.1,0.55,0.25,0.55,0.6849999999999999,0.6

@@ -1,0 +1,30 @@
+{
+  "analysis_status": "reviewer_requested_post_submission",
+  "analysis_name": "isr_novelty_ablation_aggregate",
+  "scenarios": [
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "expected_realizations_per_scenario": 20,
+  "allow_incomplete": false,
+  "bootstrap_seed": 26090806,
+  "bootstrap_resamples": 10000,
+  "formal_hypothesis_tests": false,
+  "locked_primary_results_modified": false,
+  "empty_pair_file_policy": "A zero-byte pair-agreement file is accepted only if the corresponding summary reports zero retained pairs for selection_stable_060, raw_surface_agreement, and purified_isr; otherwise analysis stops as an inconsistency.",
+  "primary_revision_contrasts": [
+    "purified_isr vs selection_stable_080",
+    "purified_isr vs count_matched_selection",
+    "purified_isr vs raw_surface_agreement",
+    "purified_isr vs selection_stable_060"
+  ],
+  "outputs": {
+    "realization_summary": "results\\revision\\isr_novelty\\analysis\\realization_summary_long.csv",
+    "variant_summary": "results\\revision\\isr_novelty\\analysis\\variant_summary.csv",
+    "paired_comparisons": "results\\revision\\isr_novelty\\analysis\\paired_comparisons.csv",
+    "raw_vs_purified_structure": "results\\revision\\isr_novelty\\analysis\\raw_vs_purified_structure.csv",
+    "structure_summary": "results\\revision\\isr_novelty\\analysis\\structure_summary.csv"
+  }
+}
