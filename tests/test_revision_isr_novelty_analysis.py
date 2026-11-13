@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from agnam.revision.isr_novelty_analysis import (
     RevisionISRAnalysisConfig,
@@ -39,18 +40,40 @@ def _summary_rows(realization: int) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _zero_summary(realization: int) -> pd.DataFrame:
+    rows = []
+    for variant in [
+        "selection_stable_060",
+        "selection_stable_080",
+        "count_matched_selection",
+        "raw_surface_agreement",
+        "purified_isr",
+    ]:
+        rows.append(
+            {
+                "scenario": "S1",
+                "realization_number": realization,
+                "variant": variant,
+                "n_retained": 0,
+                "true_positive": 0,
+                "false_positive": 0,
+                "false_negative": 3,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0,
+                "false_negative_rate": 1.0,
+                "fp_reduction_vs_selection": 0.0,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def test_variant_and_paired_aggregation():
-    data = pd.concat(
-        [_summary_rows(1), _summary_rows(2)],
-        ignore_index=True,
-    )
+    data = pd.concat([_summary_rows(1), _summary_rows(2)], ignore_index=True)
     summary = aggregate_variant_summary(data)
     assert len(summary) == 5
-
     paired = paired_purified_comparisons(
-        data,
-        bootstrap_seed=123,
-        bootstrap_resamples=100,
+        data, bootstrap_seed=123, bootstrap_resamples=100
     )
     row = paired[
         (paired["comparison"] == "purified_isr - count_matched_selection")
@@ -63,19 +86,14 @@ def test_variant_and_paired_aggregation():
 def test_raw_vs_purified_structure(tmp_path: Path):
     scenario_dir = tmp_path / "S1"
     scenario_dir.mkdir(parents=True)
-
-    frame = pd.DataFrame(
+    pd.DataFrame(
         {
             "feature_j": ["x1", "x2", "x3"],
             "feature_k": ["x4", "x5", "x6"],
             "raw_pass_060": [True, True, False],
             "purified_pass_060": [True, False, True],
         }
-    )
-    frame.to_csv(
-        scenario_dir / "realization_01_pair_agreements.csv",
-        index=False,
-    )
+    ).to_csv(scenario_dir / "realization_01_pair_agreements.csv", index=False)
 
     config = RevisionISRAnalysisConfig(
         input_root=tmp_path,
@@ -88,3 +106,47 @@ def test_raw_vs_purified_structure(tmp_path: Path):
     assert out.loc[0, "n_purified_retained"] == 2
     assert out.loc[0, "n_overlap"] == 1
     assert out.loc[0, "raw_purified_jaccard"] == 1 / 3
+
+
+def test_legitimate_zero_byte_pair_file_is_treated_as_empty_set(tmp_path: Path):
+    scenario_dir = tmp_path / "S1"
+    scenario_dir.mkdir(parents=True)
+    (scenario_dir / "realization_01_pair_agreements.csv").write_bytes(b"")
+    _zero_summary(1).to_csv(
+        scenario_dir / "realization_01_summary.csv", index=False
+    )
+
+    config = RevisionISRAnalysisConfig(
+        input_root=tmp_path,
+        output_root=tmp_path / "out",
+        scenarios=("S1",),
+        expected_realizations=1,
+    )
+    out = load_raw_vs_purified_structure(config)
+    assert out.loc[0, "n_raw_retained"] == 0
+    assert out.loc[0, "n_purified_retained"] == 0
+    assert out.loc[0, "raw_purified_jaccard"] == 1.0
+    assert bool(out.loc[0, "sets_identical"])
+
+
+def test_zero_byte_pair_file_with_nonzero_summary_is_rejected(tmp_path: Path):
+    scenario_dir = tmp_path / "S1"
+    scenario_dir.mkdir(parents=True)
+    (scenario_dir / "realization_01_pair_agreements.csv").write_bytes(b"")
+    summary = _zero_summary(1)
+    summary.loc[
+        summary["variant"] == "selection_stable_060", "n_retained"
+    ] = 1
+    summary.to_csv(
+        scenario_dir / "realization_01_summary.csv", index=False
+    )
+
+    config = RevisionISRAnalysisConfig(
+        input_root=tmp_path,
+        output_root=tmp_path / "out",
+        scenarios=("S1",),
+        expected_realizations=1,
+    )
+
+    with pytest.raises(ValueError, match="non-zero retained counts"):
+        load_raw_vs_purified_structure(config)

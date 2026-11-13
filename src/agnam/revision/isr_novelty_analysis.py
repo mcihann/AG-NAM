@@ -6,6 +6,7 @@ import json
 
 import numpy as np
 import pandas as pd
+from pandas.errors import EmptyDataError
 
 
 EXPECTED_VARIANTS = (
@@ -51,41 +52,75 @@ class RevisionISRAnalysisConfig:
     allow_incomplete: bool = False
 
 
-def _bootstrap_mean_ci(
-    values: np.ndarray,
-    *,
-    seed: int,
-    n_resamples: int,
-    confidence: float = 0.95,
-) -> tuple[float, float]:
+def _bootstrap_mean_ci(values, *, seed, n_resamples, confidence=0.95):
     values = np.asarray(values, dtype=float)
     values = values[np.isfinite(values)]
     if values.size == 0:
         return (np.nan, np.nan)
     if values.size == 1:
         return (float(values[0]), float(values[0]))
-
     rng = np.random.default_rng(seed)
     n = values.size
     samples = rng.choice(values, size=(n_resamples, n), replace=True)
     means = samples.mean(axis=1)
     alpha = 1.0 - confidence
-    lo = float(np.quantile(means, alpha / 2.0))
-    hi = float(np.quantile(means, 1.0 - alpha / 2.0))
-    return lo, hi
+    return (
+        float(np.quantile(means, alpha / 2.0)),
+        float(np.quantile(means, 1.0 - alpha / 2.0)),
+    )
 
 
-def _summary_paths(input_root: Path, scenario: str) -> list[Path]:
+def _summary_paths(input_root, scenario):
     return sorted((input_root / scenario).glob("realization_*_summary.csv"))
 
 
-def _pair_paths(input_root: Path, scenario: str) -> list[Path]:
+def _pair_paths(input_root, scenario):
     return sorted((input_root / scenario).glob("realization_*_pair_agreements.csv"))
 
 
-def load_revision_summaries(config: RevisionISRAnalysisConfig) -> pd.DataFrame:
-    frames: list[pd.DataFrame] = []
+def _realization_number_from_pair_path(path):
+    return int(path.name.split("_")[1])
 
+
+def _summary_path_for_pair_path(path):
+    number = _realization_number_from_pair_path(path)
+    return path.parent / f"realization_{number:02d}_summary.csv"
+
+
+def _validate_legitimate_empty_pair_file(path):
+    summary_path = _summary_path_for_pair_path(path)
+    if not summary_path.exists():
+        raise ValueError(
+            f"{path}: empty pair-agreement file but corresponding summary is missing: "
+            f"{summary_path}"
+        )
+    summary = pd.read_csv(summary_path)
+    required_variants = (
+        "selection_stable_060",
+        "raw_surface_agreement",
+        "purified_isr",
+    )
+    by_variant = summary.set_index("variant")
+    missing = [v for v in required_variants if v not in by_variant.index]
+    if missing:
+        raise ValueError(
+            f"{path}: empty pair-agreement file but summary is missing required "
+            f"variants {missing}."
+        )
+    retained = {
+        variant: int(by_variant.loc[variant, "n_retained"])
+        for variant in required_variants
+    }
+    if any(value != 0 for value in retained.values()):
+        raise ValueError(
+            f"{path}: pair-agreement file is empty but summary reports non-zero "
+            f"retained counts {retained}. This is inconsistent and should be "
+            f"investigated rather than silently treated as empty."
+        )
+
+
+def load_revision_summaries(config):
+    frames = []
     for scenario in config.scenarios:
         paths = _summary_paths(config.input_root, scenario)
         if not config.allow_incomplete and len(paths) != config.expected_realizations:
@@ -93,7 +128,6 @@ def load_revision_summaries(config: RevisionISRAnalysisConfig) -> pd.DataFrame:
                 f"{scenario}: expected {config.expected_realizations} summary files, "
                 f"found {len(paths)}."
             )
-
         for path in paths:
             frame = pd.read_csv(path)
             if set(frame["variant"]) != set(EXPECTED_VARIANTS):
@@ -108,7 +142,6 @@ def load_revision_summaries(config: RevisionISRAnalysisConfig) -> pd.DataFrame:
         raise ValueError("No ISR novelty summary files were found.")
 
     data = pd.concat(frames, ignore_index=True)
-
     key_cols = ["scenario", "realization_number", "variant"]
     if data.duplicated(key_cols).any():
         raise ValueError("Duplicate scenario/realization/variant rows detected.")
@@ -116,10 +149,7 @@ def load_revision_summaries(config: RevisionISRAnalysisConfig) -> pd.DataFrame:
     for scenario in config.scenarios:
         part = data[data["scenario"] == scenario]
         n_realizations = part["realization_number"].nunique()
-        if (
-            not config.allow_incomplete
-            and n_realizations != config.expected_realizations
-        ):
+        if not config.allow_incomplete and n_realizations != config.expected_realizations:
             raise ValueError(
                 f"{scenario}: expected {config.expected_realizations} unique "
                 f"realizations, found {n_realizations}."
@@ -130,9 +160,8 @@ def load_revision_summaries(config: RevisionISRAnalysisConfig) -> pd.DataFrame:
     ).reset_index(drop=True)
 
 
-def aggregate_variant_summary(data: pd.DataFrame) -> pd.DataFrame:
-    rows: list[dict] = []
-
+def aggregate_variant_summary(data):
+    rows = []
     for (scenario, variant), group in data.groupby(
         ["scenario", "variant"], sort=True
     ):
@@ -147,17 +176,13 @@ def aggregate_variant_summary(data: pd.DataFrame) -> pd.DataFrame:
             row[f"{metric}_sd"] = float(vals.std(ddof=1))
             row[f"{metric}_median"] = float(vals.median())
         rows.append(row)
-
     return pd.DataFrame(rows)
 
 
 def paired_purified_comparisons(
-    data: pd.DataFrame,
-    *,
-    bootstrap_seed: int,
-    bootstrap_resamples: int,
-) -> pd.DataFrame:
-    rows: list[dict] = []
+    data, *, bootstrap_seed, bootstrap_resamples
+):
+    rows = []
     comparators = tuple(v for v in EXPECTED_VARIANTS if v != "purified_isr")
 
     for scenario, scenario_frame in data.groupby("scenario", sort=True):
@@ -166,7 +191,6 @@ def paired_purified_comparisons(
             columns="variant",
             values=list(SUMMARY_METRICS),
         )
-
         for comparator_index, comparator in enumerate(comparators):
             for metric_index, metric in enumerate(SUMMARY_METRICS):
                 a = pd.to_numeric(
@@ -175,9 +199,8 @@ def paired_purified_comparisons(
                 b = pd.to_numeric(
                     wide[(metric, comparator)], errors="coerce"
                 ).to_numpy(dtype=float)
-                diff = a - b
-                finite = np.isfinite(diff)
-                diff = diff[finite]
+                diff = (a - b)
+                diff = diff[np.isfinite(diff)]
 
                 seed = (
                     bootstrap_seed
@@ -190,7 +213,6 @@ def paired_purified_comparisons(
                     seed=seed,
                     n_resamples=bootstrap_resamples,
                 )
-
                 higher = HIGHER_IS_BETTER.get(metric)
                 if higher is None:
                     wins = ties = losses = np.nan
@@ -206,10 +228,8 @@ def paired_purified_comparisons(
                         "comparison": f"purified_isr - {comparator}",
                         "metric": metric,
                         "n": int(diff.size),
-                        "mean_difference": float(np.mean(diff))
-                        if diff.size else np.nan,
-                        "median_difference": float(np.median(diff))
-                        if diff.size else np.nan,
+                        "mean_difference": float(np.mean(diff)) if diff.size else np.nan,
+                        "median_difference": float(np.median(diff)) if diff.size else np.nan,
                         "ci95_low": ci_lo,
                         "ci95_high": ci_hi,
                         "wins_for_purified": wins,
@@ -217,15 +237,11 @@ def paired_purified_comparisons(
                         "losses_for_purified": losses,
                     }
                 )
-
     return pd.DataFrame(rows)
 
 
-def load_raw_vs_purified_structure(
-    config: RevisionISRAnalysisConfig,
-) -> pd.DataFrame:
-    rows: list[dict] = []
-
+def load_raw_vs_purified_structure(config):
+    rows = []
     for scenario in config.scenarios:
         paths = _pair_paths(config.input_root, scenario)
         if not config.allow_incomplete and len(paths) != config.expected_realizations:
@@ -235,7 +251,19 @@ def load_raw_vs_purified_structure(
             )
 
         for path in paths:
-            frame = pd.read_csv(path)
+            try:
+                frame = pd.read_csv(path)
+            except EmptyDataError:
+                _validate_legitimate_empty_pair_file(path)
+                frame = pd.DataFrame(
+                    columns=[
+                        "feature_j",
+                        "feature_k",
+                        "raw_pass_060",
+                        "purified_pass_060",
+                    ]
+                )
+
             required = {
                 "feature_j",
                 "feature_k",
@@ -258,10 +286,7 @@ def load_raw_vs_purified_structure(
             }
             union = raw_set | purified_set
             overlap = raw_set & purified_set
-
-            realization_number = int(
-                path.name.split("_")[1]
-            )
+            realization_number = _realization_number_from_pair_path(path)
 
             rows.append(
                 {
@@ -284,32 +309,28 @@ def load_raw_vs_purified_structure(
     ).reset_index(drop=True)
 
 
-def aggregate_structure_summary(structure: pd.DataFrame) -> pd.DataFrame:
-    rows: list[dict] = []
+def aggregate_structure_summary(structure):
+    rows = []
     for scenario, group in structure.groupby("scenario", sort=True):
         rows.append(
             {
                 "scenario": scenario,
                 "n_realizations": int(len(group)),
                 "mean_raw_retained": float(group["n_raw_retained"].mean()),
-                "mean_purified_retained": float(
-                    group["n_purified_retained"].mean()
-                ),
+                "mean_purified_retained": float(group["n_purified_retained"].mean()),
                 "mean_overlap": float(group["n_overlap"].mean()),
                 "mean_raw_only": float(group["n_raw_only"].mean()),
                 "mean_purified_only": float(group["n_purified_only"].mean()),
                 "mean_raw_purified_jaccard": float(
                     group["raw_purified_jaccard"].mean()
                 ),
-                "identical_set_fraction": float(
-                    group["sets_identical"].mean()
-                ),
+                "identical_set_fraction": float(group["sets_identical"].mean()),
             }
         )
     return pd.DataFrame(rows)
 
 
-def run_analysis(config: RevisionISRAnalysisConfig) -> dict[str, Path]:
+def run_analysis(config):
     config.output_root.mkdir(parents=True, exist_ok=True)
 
     data = load_revision_summaries(config)
@@ -326,9 +347,7 @@ def run_analysis(config: RevisionISRAnalysisConfig) -> dict[str, Path]:
         "realization_summary": config.output_root / "realization_summary_long.csv",
         "variant_summary": config.output_root / "variant_summary.csv",
         "paired_comparisons": config.output_root / "paired_comparisons.csv",
-        "raw_vs_purified_structure": (
-            config.output_root / "raw_vs_purified_structure.csv"
-        ),
+        "raw_vs_purified_structure": config.output_root / "raw_vs_purified_structure.csv",
         "structure_summary": config.output_root / "structure_summary.csv",
         "manifest": config.output_root / "analysis_manifest.json",
     }
@@ -349,6 +368,12 @@ def run_analysis(config: RevisionISRAnalysisConfig) -> dict[str, Path]:
         "bootstrap_resamples": config.bootstrap_resamples,
         "formal_hypothesis_tests": False,
         "locked_primary_results_modified": False,
+        "empty_pair_file_policy": (
+            "A zero-byte pair-agreement file is accepted only if the "
+            "corresponding summary reports zero retained pairs for "
+            "selection_stable_060, raw_surface_agreement, and purified_isr; "
+            "otherwise analysis stops as an inconsistency."
+        ),
         "primary_revision_contrasts": [
             "purified_isr vs selection_stable_080",
             "purified_isr vs count_matched_selection",
@@ -365,5 +390,4 @@ def run_analysis(config: RevisionISRAnalysisConfig) -> dict[str, Path]:
         json.dumps(manifest, indent=2),
         encoding="utf-8",
     )
-
     return outputs
