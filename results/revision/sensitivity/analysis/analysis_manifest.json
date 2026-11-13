@@ -1,0 +1,26 @@
+{
+  "analysis_status": "reviewer_requested_post_submission",
+  "analysis_name": "parameter_sensitivity_aggregate",
+  "scenarios": [
+    "S1"
+  ],
+  "expected_realizations_per_scenario": 20,
+  "allow_incomplete": false,
+  "bootstrap_seed": 26090806,
+  "bootstrap_resamples": 10000,
+  "formal_hypothesis_tests": false,
+  "locked_primary_results_modified": false,
+  "reference_by_family": {
+    "threshold_grid": "threshold_s60_i60",
+    "run_count": "runs_05",
+    "candidate_k": "k_locked",
+    "reference_support": "support_512"
+  },
+  "difference_definition": "configuration minus submitted-family reference",
+  "outputs": {
+    "realization_summary": "results\\revision\\sensitivity\\analysis\\realization_summary_long.csv",
+    "configuration_summary": "results\\revision\\sensitivity\\analysis\\configuration_summary.csv",
+    "paired_vs_reference": "results\\revision\\sensitivity\\analysis\\paired_vs_reference.csv",
+    "family_range_summary": "results\\revision\\sensitivity\\analysis\\family_range_summary.csv"
+  }
+}
