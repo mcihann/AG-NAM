@@ -2,7 +2,10 @@
   "analysis_status": "reviewer_requested_post_submission",
   "analysis_name": "parameter_sensitivity_aggregate",
   "scenarios": [
-    "S1"
+    "S1",
+    "S2",
+    "S3",
+    "S4"
   ],
   "expected_realizations_per_scenario": 20,
   "allow_incomplete": false,
