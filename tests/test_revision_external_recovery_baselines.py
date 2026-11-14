@@ -70,3 +70,12 @@ def test_pair_universe_mismatch_rejected():
         assert "Pair-score universe mismatch" in str(exc)
     else:
         raise AssertionError("Expected ValueError")
+
+
+def test_runtime_accounting_is_explicit_in_source():
+    import inspect
+    from agnam.revision import external_recovery_baselines as module
+
+    source = inspect.getsource(module.friedman_h_pair_scores)
+    assert "fit_seconds" in source
+    assert "scoring_seconds" in source

@@ -566,9 +566,12 @@ def friedman_h_pair_scores(
         random_state=int(seed),
     )
 
-    started = time.perf_counter()
     with PeakRSSMonitor() as memory:
+        fit_started = time.perf_counter()
         model.fit(X_fit, y_fit)
+        fit_seconds = time.perf_counter() - fit_started
+
+        scoring_started = time.perf_counter()
 
         single = {}
         single_grid = {}
@@ -645,11 +648,12 @@ def friedman_h_pair_scores(
                 canonical_pair(names[j], names[k])
             ] = float(h_score)
 
-    elapsed = time.perf_counter() - started
+        scoring_seconds = time.perf_counter() - scoring_started
 
     return (
         scores,
-        float(elapsed),
+        float(fit_seconds),
+        float(scoring_seconds),
         memory.start_mib,
         memory.end_mib,
         memory.peak_mib,

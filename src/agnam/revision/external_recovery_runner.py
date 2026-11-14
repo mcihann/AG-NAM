@@ -222,7 +222,8 @@ def run_external_recovery_realization(
     if "friedman_h_gbdt" in requested:
         (
             scores,
-            elapsed,
+            fit_seconds,
+            scoring_seconds,
             rss_start,
             rss_end,
             rss_peak,
@@ -250,9 +251,12 @@ def run_external_recovery_realization(
                 dataset_seed=spec.dataset_seed,
                 candidate_k=candidate_k,
                 metrics=metrics,
-                fit_seconds=elapsed,
-                scoring_seconds=0.0,
-                standalone_seconds=elapsed,
+                fit_seconds=fit_seconds,
+                scoring_seconds=scoring_seconds,
+                standalone_seconds=(
+                    fit_seconds
+                    + scoring_seconds
+                ),
                 rss_start_mib=rss_start,
                 rss_end_mib=rss_end,
                 rss_peak_mib=rss_peak,
