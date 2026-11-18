@@ -547,6 +547,8 @@ def friedman_h_pair_scores(
     feature_names,
     seed: int,
     grid_resolution: int = 10,
+    allow_degenerate_grid_fallback: bool = False,
+    grid_fallback_features: list[str] | None = None,
 ) -> tuple[
     dict[Pair, float],
     float,
@@ -575,18 +577,37 @@ def friedman_h_pair_scores(
 
         single = {}
         single_grid = {}
+        fallback_indices = set()
 
         for j in range(len(names)):
-            pd_result = partial_dependence(
-                model,
-                X_score,
-                [j],
+            pd_kwargs = dict(
                 response_method="decision_function",
                 method="recursion",
                 percentiles=(0.05, 0.95),
                 grid_resolution=int(grid_resolution),
                 kind="average",
             )
+            try:
+                pd_result = partial_dependence(model, X_score, [j], **pd_kwargs)
+            except ValueError as exc:
+                if (not allow_degenerate_grid_fallback
+                        or "percentiles are too close" not in str(exc)):
+                    raise
+                # Only the affected axis changes. Use a deterministic subset of
+                # observed scoring-support values, including both endpoints.
+                # No labels, truth, or test-set information are involved.
+                unique = np.unique(X_score[:, j])
+                if not len(unique) or not np.isfinite(unique).all():
+                    raise ValueError("Invalid scoring support for H grid") from exc
+                indices = np.linspace(0, len(unique) - 1,
+                                      min(len(unique), int(grid_resolution)), dtype=int)
+                fallback_grid = unique[indices]
+                pd_result = partial_dependence(
+                    model, X_score, [j], custom_values={j: fallback_grid}, **pd_kwargs
+                )
+                fallback_indices.add(j)
+                if grid_fallback_features is not None:
+                    grid_fallback_features.append(names[j])
             single[j] = _center(pd_result["average"][0])
             single_grid[j] = np.asarray(
                 pd_result["grid_values"][0],
@@ -596,15 +617,24 @@ def friedman_h_pair_scores(
         scores: dict[Pair, float] = {}
 
         for j, k in combinations(range(len(names)), 2):
+            # Use exactly the single-axis grids for pairs involving a fallback.
+            # Unaffected pairs retain the original sklearn call unchanged.
+            pair_kwargs = {}
+            pair_features = [(j, k)]
+            if j in fallback_indices or k in fallback_indices:
+                pair_kwargs["custom_values"] = {j: single_grid[j], k: single_grid[k]}
+                # sklearn resolves custom_values against individual feature keys.
+                pair_features = [j, k]
             pd_result = partial_dependence(
                 model,
                 X_score,
-                [(j, k)],
+                pair_features,
                 response_method="decision_function",
                 method="recursion",
                 percentiles=(0.05, 0.95),
                 grid_resolution=int(grid_resolution),
                 kind="average",
+                **pair_kwargs,
             )
 
             surface = _center(pd_result["average"][0])
