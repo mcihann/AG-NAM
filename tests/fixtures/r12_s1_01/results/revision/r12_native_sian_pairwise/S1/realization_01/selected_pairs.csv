@@ -1,0 +1,16 @@
+feature_a,feature_b,is_true
+x1,x4,False
+x10,x11,False
+x10,x3,False
+x11,x4,False
+x18,x4,False
+x19,x4,False
+x2,x3,False
+x2,x4,False
+x2,x8,False
+x3,x4,True
+x3,x8,False
+x4,x8,False
+x4,x9,False
+x5,x6,True
+x8,x9,True

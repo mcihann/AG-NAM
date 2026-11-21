@@ -1,0 +1,42 @@
+{
+  "analysis_name": "r12_full_command_wallclock_cost_audit",
+  "label": "r12_s1_01_sian",
+  "command": [
+    "python",
+    "scripts/run_r12_sian_pairwise_pilot.py",
+    "--scenario",
+    "S1",
+    "--realization",
+    "1",
+    "--execute"
+  ],
+  "experiment_run_status": "complete",
+  "returncode": 0,
+  "elapsed_wall_seconds": 119.44336769997608,
+  "begun_utc": "2026-11-20T21:18:46.384431+00:00",
+  "ended_utc": "2026-11-20T21:20:45.827547+00:00",
+  "sample_interval_seconds": 0.5,
+  "peak_process_tree_rss_mib_sampled": 985.421875,
+  "rss_samples": 213,
+  "peak_nvidia_smi_process_gpu_memory_mib_sampled": null,
+  "gpu_samples": 0,
+  "max_process_count_sampled": 1,
+  "memory_status": "sampled process tree RSS; not exact continuous peak",
+  "timing_scope": "whole launched command; includes only stages executed by that command",
+  "comparability_cautions": [
+    "CPU/GPU memory is sampled (not a true instantaneous peak).",
+    "GPU process memory from nvidia-smi is not torch.cuda.max_memory_allocated().",
+    "Existing cached/skipped stages are NOT counted if the command resumes rather than recomputes.",
+    "Measured times are platform, command, implementation and cache dependent.",
+    "No completed benchmark result is implied by a dry-run or by the profiler alone."
+  ],
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.10.19",
+  "repo": "C:\\Users\\mucah\\AG-NAM",
+  "git": {
+    "head": "bd6be1d12bd3d1b7eb493e269cfcf6d6fc8c344a",
+    "branch": "revision-reviewers",
+    "dirty": "M src/agnam/revision/external_baseline_protocol.py\n?? AG_NAM_R11_Final_Evidence.zip\n?? AG_NAM_R11_Manuscript_Integration.zip\n?? AG_NAM_R12_Preflight.zip\n?? AG_NAM_R6_R10_Additional_Evidence.zip\n?? README.txt\n?? agnam_r10_domain_grounded_pilot.zip\n?? agnam_r10_final_reporting_addon.zip\n?? agnam_r10_reporting_merge_fix.zip\n?? agnam_r11_additive_groves_alpha_fix.zip\n?? agnam_r11_additive_groves_analysis.zip\n?? agnam_r11_additive_groves_bagging_fix.zip\n?? agnam_r11_additive_groves_batch.zip\n?? agnam_r11_external_baseline_pair_key_fix.zip\n?? agnam_r11_reporting_tables.zip\n?? agnam_r6_friedman_grid_fix.zip\n?? agnam_r6_realx_external_recovery.zip\n?? agnam_r7_residual_sensitivity.zip\n?? agnam_r8_openml_calibration.zip\n?? agnam_r9_predictive_analysis_addon.zip\n?? agnam_r9_strength_fnr_predictive.zip\n?? collect_r11_final_evidence.py\n?? collect_r6_r10_missing_evidence.py\n?? docs/R12_PROTOCOL_AND_LIMITS.md\n?? docs/revision_r11_highlight_table_and_reviewer_responses_draft.md\n?? docs/revision_r11_highlight_table_and_reviewer_responses_draft_v2.md\n?? external/\n?? log.txt\n?? scripts/audit_sian_runtime_api.py\n?? scripts/build_r11_comparison_tables.py\n?? scripts/collect_r12_pilot_evidence.py\n?? scripts/collect_r12_preflight.py\n?? scripts/r12_profile_command.py\n?? scripts/run_r12_agnam_canonical_cost.py\n?? scripts/run_r12_sian_pairwise_pilot.py\n?? scripts/run_revision_additive_groves_analysis.py\n?? scripts/run_revision_additive_groves_batch.py\n?? tests/test_build_r11_comparison_tables.py\n?? tests/test_r12_infrastructure.py\n?? tests/test_r12_native_sian_pilot.py\n?? tests/test_revision_additive_groves_analysis.py\n?? tests/test_revision_additive_groves_batch.py\n?? tests/test_revision_r11_external_baseline_pair_keys.py"
+  },
+  "log_sha256": "5ea6b862bd2f96992532ed3f4cb3d3b20299481f21384f1c05d56ec146bdc9a1"
+}

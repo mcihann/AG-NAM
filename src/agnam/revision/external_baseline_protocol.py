@@ -89,21 +89,25 @@ def project_scored_interaction_sets_to_pairs(
     *,
     floor_score: float = 0.0,
 ) -> dict[tuple[str, str], float]:
+    # Preserve the established feature-order convention of unordered_pairs().
+    # Alphabetically sorting interaction members here would yield incompatible
+    # dictionary keys whenever feature_names is not alphabetically ordered.
     universe = unordered_pairs(feature_names)
     scores = {pair: float(floor_score) for pair in universe}
-    allowed = set(feature_names)
+    order = {str(name): i for i, name in enumerate(feature_names)}
+    allowed = set(order)
 
     for raw_set, raw_score in scored_sets:
-        members = tuple(sorted(set(str(x) for x in raw_set)))
-        if len(members) < 2:
+        members_set = set(str(x) for x in raw_set)
+        if len(members_set) < 2:
             continue
-        unknown = set(members).difference(allowed)
+        unknown = members_set.difference(allowed)
         if unknown:
             raise ValueError(f"Unknown features in interaction set: {sorted(unknown)}")
 
+        members = tuple(sorted(members_set, key=order.__getitem__))
         score = float(raw_score)
         for pair in combinations(members, 2):
-            pair = tuple(sorted(pair))
             scores[pair] = max(scores[pair], score)
 
     return scores
@@ -113,7 +117,12 @@ def validate_full_pair_scores(
     feature_names: Sequence[str],
     scores: Mapping[tuple[str, str], float],
 ) -> None:
-    expected = set(unordered_pairs(feature_names))
+    # Validation concerns undirected pair identity, not key orientation.
+    # Normalize both sides so a nonalphabetical feature order is valid.
+    expected = {
+        tuple(sorted(pair))
+        for pair in unordered_pairs(feature_names)
+    }
     observed = {
         tuple(sorted((str(pair[0]), str(pair[1]))))
         for pair in scores

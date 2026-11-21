@@ -1,0 +1,275 @@
+{
+  "analysis": "r12_native_pairwise_constrained_sian_end_to_end",
+  "interpretation": "Descriptive pilot only, NOT full unrestricted-order SIAN and NOT AG-NAM head-to-head proof",
+  "status": "complete",
+  "created_utc": "2026-11-20T21:18:49.547425+00:00",
+  "scenario": "S1",
+  "realization": 1,
+  "sian_version": "0.9.5",
+  "torch_version": "2.5.1+cu121",
+  "device": "cuda",
+  "data_seed": 10000,
+  "split_seeds": {
+    "outer": 20000,
+    "final": 30000
+  },
+  "training_seeds": {
+    "reference": 40000,
+    "final": 90000
+  },
+  "data_counts": {
+    "train": 3000,
+    "validation": 1000,
+    "test": 1000
+  },
+  "split_index_sha256": {
+    "train": "5cad20b3028330682410ee575bf524b9afb90fedc74188d1b73b994bae110ab4",
+    "validation": "2e3396d9d02b445b4d4def4139739bf7a96de2681cba1c1b03a86877f2cc34d2",
+    "test": "cdfaf671b5f73c8eade2c58420a3a6e262295308895186f461b15beeb054d920"
+  },
+  "feature_names": [
+    "x1",
+    "x2",
+    "x3",
+    "x4",
+    "x5",
+    "x6",
+    "x7",
+    "x8",
+    "x9",
+    "x10",
+    "x11",
+    "x12",
+    "x13",
+    "x14",
+    "x15",
+    "x16",
+    "x17",
+    "x18",
+    "x19",
+    "x20"
+  ],
+  "native_fis_settings": {
+    "max_interaction_degree": 2,
+    "theta_percentile_mode": true,
+    "theta_thresholds": {
+      "1": 0.5,
+      "2": 0.1
+    },
+    "tau_thresholds": {
+      "2": 0.5
+    },
+    "interaction_support_n": 32,
+    "explainer_batch_size": 512,
+    "max_frontier": 1000
+  },
+  "training_settings": {
+    "hidden_sizes": [
+      128,
+      64,
+      32
+    ],
+    "small_sizes": [
+      0,
+      16,
+      12,
+      8,
+      1
+    ],
+    "batch_size": 32,
+    "max_epochs": 300,
+    "learning_rate": 0.005,
+    "l1_coefficient": 5e-05,
+    "early_stop_patience": 20,
+    "gradient_clip_norm": 1.0
+  },
+  "selected_native_terms_indexed": [
+    [
+      0
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      1,
+      7
+    ],
+    [
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      2,
+      7
+    ],
+    [
+      2,
+      9
+    ],
+    [
+      3
+    ],
+    [
+      3,
+      7
+    ],
+    [
+      3,
+      8
+    ],
+    [
+      3,
+      10
+    ],
+    [
+      3,
+      17
+    ],
+    [
+      3,
+      18
+    ],
+    [
+      4
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      5
+    ],
+    [
+      6
+    ],
+    [
+      7
+    ],
+    [
+      7,
+      8
+    ],
+    [
+      8
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      10
+    ]
+  ],
+  "selected_pair_names": [
+    [
+      "x1",
+      "x4"
+    ],
+    [
+      "x10",
+      "x11"
+    ],
+    [
+      "x10",
+      "x3"
+    ],
+    [
+      "x11",
+      "x4"
+    ],
+    [
+      "x18",
+      "x4"
+    ],
+    [
+      "x19",
+      "x4"
+    ],
+    [
+      "x2",
+      "x3"
+    ],
+    [
+      "x2",
+      "x4"
+    ],
+    [
+      "x2",
+      "x8"
+    ],
+    [
+      "x3",
+      "x4"
+    ],
+    [
+      "x3",
+      "x8"
+    ],
+    [
+      "x4",
+      "x8"
+    ],
+    [
+      "x4",
+      "x9"
+    ],
+    [
+      "x5",
+      "x6"
+    ],
+    [
+      "x8",
+      "x9"
+    ]
+  ],
+  "n_selected_pairs": 15,
+  "interaction_recovery": {
+    "true_positive": 3,
+    "false_positive": 12,
+    "false_negative": 0,
+    "precision": 0.2,
+    "recall": 1.0,
+    "f1": 0.33333333333333337
+  },
+  "test_predictive_metrics": {
+    "test_auroc": 0.9077883938288203,
+    "test_auprc": 0.9000614696719063
+  },
+  "reference_mlp_best_epoch": 59,
+  "sian_train": {
+    "best_epoch": 300,
+    "epochs_ran": 300,
+    "best_validation_auroc": 0.8948970936559759
+  },
+  "stage_elapsed_seconds": {
+    "reference_mlp_seconds": 17.722726800013334,
+    "native_fis_seconds": 8.665149500011466,
+    "native_sian_fit_seconds": 89.33892789995298,
+    "whole_pipeline_seconds": 115.80853060004301
+  },
+  "peak_process_rss_mib_sampled": 985.140625,
+  "peak_torch_cuda_allocated_mib": 24.90869140625,
+  "test_data_policy": "never used for FIS, model selection, scaling or early stopping",
+  "cautions": [
+    "SIAN FIS thresholds are fixed R12 adaptation; not paper-original parameters.",
+    "Pairwise restriction MAX_K=2 changes original higher-order SIAN scope.",
+    "A selected-set F1 is not a full-universe ranking AUPRC.",
+    "One realization provides no evidence of statistical superiority.",
+    "GPU allocated peak and sampled RSS have different definitions."
+  ]
+}
